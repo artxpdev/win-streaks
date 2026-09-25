@@ -707,6 +707,14 @@ button{font-family:inherit}
 
 /* today's number in the month grid: vibrant green */
 .mday.is-today b,.mday.is-today[aria-pressed="true"] b{color:#0DA24E!important}
+
+/* today's wins: label on top, icons a little bigger across the full width, still one line */
+.tledger{grid-template-columns:1fr auto!important}
+.tlh b{grid-column:1!important;grid-row:1!important}
+.tlh span{grid-column:2!important;grid-row:1!important;text-align:right}
+.tokens{grid-column:1/-1!important;grid-row:2!important;justify-content:space-between!important;flex-wrap:nowrap!important;margin-top:6px!important;gap:2px!important}
+.tledger .tok{width:26px!important;height:26px!important;flex:none}
+.tledger .tok svg{width:15px!important;height:15px!important}
 </style>
 
 </head>
@@ -1655,7 +1663,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="16";
+const APP_VERSION="17";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
