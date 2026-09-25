@@ -1432,7 +1432,7 @@ function readForm(){
 function occurrences(date,repeat,times,days){
   if(repeat==="days"){
     const weeks=Math.min(26,Math.max(1,parseInt(times)||1)), start=parse(date), ws=weekOf(start), pick=(days&&days.length?days:[start.getDay()]).slice().sort((a,b)=>a-b), out=[];
-    for(let w=0;w<weeks;w++)for(const dw of pick){const d=addDays(ws,w*7+dw);if(d>=start)out.push(iso(d))}
+    let got=0; for(let w=0;got<weeks&&w<weeks+1;w++){let any=false;for(const dw of pick){const d=addDays(ws,w*7+dw);if(d>=start){out.push(iso(d));any=true}}if(any)got++}
     return out;
   }
   const out=[];let d=parse(date);const n=repeat==="none"?1:Math.min(12,Math.max(1,parseInt(times)||1));
@@ -1610,7 +1610,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="8";
+const APP_VERSION="9";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
