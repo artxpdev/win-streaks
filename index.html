@@ -1587,6 +1587,17 @@ $("#statusDate").textContent=`· ${WD[TODAY.getDay()]} ${TODAY.getDate()} ${MO[T
 render();
 dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle();
 </script>
-<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
+<script>
+// App version: when a newer one is published, the app reloads itself the next time you open it.
+const APP_VERSION="6";
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
+async function checkForUpdate(){
+  try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
+    if(v&&String(v)!==APP_VERSION){const reg=await navigator.serviceWorker?.getRegistration();await reg?.update();location.reload()}}catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkForUpdate()});
+window.addEventListener("pageshow",checkForUpdate);
+setInterval(checkForUpdate,30*60*1000);
+</script>
 </body>
 </html>
