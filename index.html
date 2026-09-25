@@ -1270,7 +1270,7 @@ function monthView(){
       <b>${d}</b><i>${list.slice(0,6).map(e=>`<em class="${e.done?"on":""}" style="${cv(e.area)}"></em>`).join("")}</i></button>`}
   h+=`</div>`;
   // the whole month, day by day; the tapped day is highlighted and scrolled to
-  const row=e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+  const row=e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&e.area!=="running"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
         <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
         <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`;
   const dates=[...new Set(mItems.map(e=>e.date))]; if(state.day>=a&&state.day<=b&&!dates.includes(state.day))dates.push(state.day); dates.sort();
@@ -1688,7 +1688,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="23";
+const APP_VERSION="24";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
