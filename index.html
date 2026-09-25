@@ -1247,7 +1247,7 @@ function weekView(){
       const c=list.filter(e=>e.done).length;
       h+=`<div class="wday ${k===T?"is-today":""}"><h3>${label(k)}${k===T?" · today":""}<span>${list.length?`${c}/${list.length}`:""}</span></h3>
         ${holidayOn(k)?`<div class="whol">${esc(holidayOn(k)[2])}</div>`:""}
-        ${list.length?list.map(e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+        ${list.length?list.map(e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&e.area!=="running"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
           <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
           <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`).join(""):`<div class="wempty">Nothing planned</div>`}
       </div>`;
@@ -1688,7 +1688,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="24";
+const APP_VERSION="25";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
