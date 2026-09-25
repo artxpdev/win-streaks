@@ -28,6 +28,11 @@
 .rday[aria-pressed="true"]{background:var(--ink);color:var(--phone);border-color:var(--ink)}
 
 .tabs{grid-template-columns:repeat(5,1fr)!important}
+
+/* roomier bottom bar */
+.tabs{padding:11px 14px 10px!important;column-gap:10px}
+.tab{font-size:11px!important;gap:5px!important;letter-spacing:.01em}
+.tab svg{width:23px!important;height:23px!important}
 </style>
 <title>N's Win Streaks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1611,7 +1616,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="10";
+const APP_VERSION="11";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
