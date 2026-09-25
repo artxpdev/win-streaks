@@ -19,7 +19,7 @@
 <style>
 :root{
   --ground:#FFFFFF; --phone:#FFFFFF; --ink:#151515; --muted:#7C7B77; --line:#ECEBE7; --chip:#F5F4F1; --frame:#151515;
-  --done:#2A62D8; --warn:#E0352B; --pop:#E0352B; --on:#151515; --sky:#DDEAF8;
+  --done:#2A62D8; --warn:#FF3376; --pop:#FF3376; --on:#151515; --sky:#DDEAF8;
   --running:#A6F0B2; --social:#FFC4DE; --income:#DDF7A6; --love:#FF9BCB;
   --diet:#8FE39C; --wellbeing:#FCF1A0; --admin:#A9BAFF; --startup:#4FC97C; --networking:#B3E9F7;
   --display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
@@ -31,7 +31,7 @@
   :root:not([data-theme="light"]){
     color-scheme:dark;
     --ground:#0E0E0F; --phone:#161617; --ink:#F4F3EF; --muted:#9C9B96; --line:#2A2A2C; --chip:#212123; --frame:#2A2A2C;
-    --done:#5B8BF0; --warn:#FF5A4E; --pop:#FF5A4E; --sky:#1B2A3F;
+    --done:#5B8BF0; --warn:#FF3376; --pop:#FF3376; --sky:#1B2A3F;
     --running:#8FE09D; --social:#F5AFCD; --income:#CBEB8F; --love:#FF86BD;
     --diet:#7FD68C; --wellbeing:#F4E68A; --admin:#95A9FF; --startup:#46B870; --networking:#9FDCEC;
   }
@@ -39,7 +39,7 @@
 :root[data-theme="dark"]{
   color-scheme:dark;
   --ground:#0E0E0F; --phone:#161617; --ink:#F4F3EF; --muted:#9C9B96; --line:#2A2A2C; --chip:#212123; --frame:#2A2A2C;
-  --done:#5B8BF0; --warn:#FF5A4E; --pop:#FF5A4E; --sky:#1B2A3F;
+  --done:#5B8BF0; --warn:#FF3376; --pop:#FF3376; --sky:#1B2A3F;
   --running:#8FE09D; --social:#F5AFCD; --income:#CBEB8F; --love:#FF86BD;
   --diet:#7FD68C; --wellbeing:#F4E68A; --admin:#95A9FF; --startup:#46B870; --networking:#9FDCEC;
 }
@@ -1702,7 +1702,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="28";
+const APP_VERSION="29";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
