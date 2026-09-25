@@ -722,6 +722,10 @@ button{font-family:inherit}
 .row.filled{background:var(--c)!important;border-color:var(--c)!important}
 .row.filled .n,.row.filled .t{color:#151515}
 .row.filled .check{border-color:rgba(21,21,21,.45)!important;background:rgba(255,255,255,.55)}
+
+/* the tab you're on: vibrant green */
+.tab[aria-selected="true"]{color:#0DA24E!important;font-weight:700!important}
+.tab.add[aria-selected="true"] svg{background:#0DA24E!important;color:#fff!important}
 </style>
 
 </head>
@@ -1688,7 +1692,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="25";
+const APP_VERSION="26";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
