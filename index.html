@@ -731,6 +731,11 @@ button{font-family:inherit}
 .namecard input:focus{outline:none;border-color:var(--startup)}
 
 .brand span{color:#FF3376!important}
+
+/* Social colour */
+:root{--social:#FFAAF1}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--social:#FFAAF1}}
+:root[data-theme="dark"]{--social:#FFAAF1}
 </style>
 
 </head>
@@ -756,8 +761,8 @@ const AREAS={
   running:{n:"Run",unit:"km",how:"Each run, with kilometres"},
   social:{n:"Social",how:"Friends, family, parties, and hosting people at home"},
   income:{n:"Income",unit:"₪",how:"Paid work, invoices, proposals, with amounts"},
-  love:{n:"Love",how:"Dates, time together"},
   networking:{n:"Networking",how:"Meetings with valuable networks"},
+  love:{n:"Love",how:"Dates, time together"},
   admin:{n:"Life admin",how:"Bills, forms, appointments, errands"},
   startup:{n:"Startup",how:"Startup events you attend: meetups, conferences, demo days, networking"},
   bdays:{n:"Bdays",how:"Birthdays to remember and celebrate"},
@@ -1702,7 +1707,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="29";
+const APP_VERSION="30";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
