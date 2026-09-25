@@ -739,7 +739,7 @@ button{font-family:inherit}
 
 <script>
 const AREAS={
-  running:{n:"Running",unit:"km",how:"Each run, with kilometres"},
+  running:{n:"Run",unit:"km",how:"Each run, with kilometres"},
   social:{n:"Social",how:"Friends, family, parties, and hosting people at home"},
   income:{n:"Income",unit:"₪",how:"Paid work, invoices, proposals, with amounts"},
   love:{n:"Love",how:"Dates, time together"},
@@ -1677,7 +1677,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="20";
+const APP_VERSION="21";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
