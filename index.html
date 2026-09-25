@@ -704,6 +704,9 @@ button{font-family:inherit}
 .wk-head{position:sticky;top:-8px;z-index:2;display:flex;justify-content:space-between;margin:22px -20px 0;padding:10px 20px 8px;background:color-mix(in srgb,var(--phone) 92%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--ink);font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase}
 .wk-head span:last-child{color:var(--muted)}
 .wk-more{text-align:center;color:var(--muted);font-size:12px;padding:18px 0 8px}
+
+/* today's number in the month grid: vibrant green */
+.mday.is-today b,.mday.is-today[aria-pressed="true"] b{color:#0DA24E!important}
 </style>
 
 </head>
@@ -1652,7 +1655,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="15";
+const APP_VERSION="16";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
