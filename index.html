@@ -747,7 +747,7 @@ const STARTER=[
 let items=[], appItems=[], gItems=[], db=null, dbState="loading", sampleApi=null;
 function remerge(){items=[...appItems,...gItems]}
 let state={view:"day",monthStart:iso(new Date(TODAY.getFullYear(),TODAY.getMonth(),1)),day:T,weekStart:iso(weekOf(TODAY)),area:"all",range:"week",winWeek:iso(weekOf(TODAY))};
-const blank=()=>({editId:null,title:"",area:"running",date:state.day,t:"08:00",end:"",repeat:"none",times:4,amount:"",notes:""});
+const blank=()=>({editId:null,title:"",area:"running",date:state.day,t:"08:00",end:"",repeat:"none",times:4,amount:"",notes:"",remind:""});
 let draft=blank(), formMsg="", quickText="", quickMsg="", quickBusy=false, parsed=[], confirmDel=null, confirmClear=false, toastTimer;
 
 function norm(id,d){
@@ -755,7 +755,7 @@ function norm(id,d){
   return {id,title:clean(d.title,120),area:d.area in AREAS?d.area:"admin",date:d.date,t:clean(d.t,5),end:clean(d.end,5),
     done:!!d.done,doneAt:d.doneAt||null,amount:Number(d.amount)||null,notes:clean(d.notes,800),reflection:clean(d.reflection,800),
     example:!!d.example,createdAt:d.createdAt||0,series:d.series||null,
-    gid:typeof d.gid==="string"?d.gid.slice(0,200):"",gsig:typeof d.gsig==="string"?d.gsig:"",gpush:Number(d.gpush)||0};
+    gid:typeof d.gid==="string"?d.gid.slice(0,200):"",gsig:typeof d.gsig==="string"?d.gsig:"",gpush:Number(d.gpush)||0,remind:d.remind==="none"?"none":(d.remind===""||d.remind==null||!isFinite(Number(d.remind)))?"":Number(d.remind)};
 }
 const find=id=>items.find(x=>x.id===id);
 const inArea=e=>state.area==="all"||e.area===state.area;
@@ -801,7 +801,10 @@ const GOOGLE_CLIENT_ID="1010851188856-244362ebhaplgkbl9760um8tusj6b9vi.apps.goog
 const TZ="Asia/Jerusalem", GAPI="https://www.googleapis.com/calendar/v3/calendars/primary/events", GSCOPE="https://www.googleapis.com/auth/calendar.events";
 const SYNC_FROM="2026-09-25"; // nothing older than this is pulled in
 let gEvents=[], gMeta={}, gState={s:"off",msg:""}, gBusy=false, gPushTimer=0, gStopPush=false, gTok=null;
-const gsig=e=>[e.title,e.date,e.t||"",e.end||""].join("|");
+const gsig=e=>[e.title,e.date,e.t||"",e.end||""].join("|")+(e.remind!==""&&e.remind!=null?"|r"+e.remind:"");
+const REMINDS=[["","Calendar default"],["none","No reminder"],[0,"At start"],[10,"10 min before"],[30,"30 min before"],[60,"1 hour before"],[120,"2 hours before"],[1440,"1 day before"]];
+const remindLabel=r=>(REMINDS.find(([v])=>String(v)===String(r))||REMINDS[0])[1];
+function gRem(e){return e.remind==="none"?{useDefault:false,overrides:[]}:e.remind===""||e.remind==null?{useDefault:true}:{useDefault:false,overrides:[{method:"popup",minutes:Number(e.remind)}]}}
 const AREA_RX=[["running",/\brun\b|running|ריצה|marathon|\b\d+ ?k\b|parkrun|\bjog/i],["love",/\bdate\b|date night|❤|anniversary|\blove\b/i],
   ["wellbeing",/yoga|meditat|therap|\bgym\b|pilates|massage|doctor|dentist|\bswim|sleep|\bspa\b/i],["social",/dinner|party|birthday|drinks|friends|family|bbq|brunch|hosting|wedding|shabbat/i],
   ["networking",/meeting|coffee|\bintro|lunch|call with|1:1|1-1|mentor|catch ?up/i],["startup",/meetup|demo day|conference|pitch|founder|startup|hackathon|summit|webinar|\bevent\b|expo/i],
@@ -875,14 +878,14 @@ function gTimes(e){
   if(!end){const [h,m]=e.t.split(":").map(Number);end=h>=23?"23:59":`${pad(h+1)}:${pad(m)}`}
   return {startTime:`${e.date}T${e.t}:00`,endTime:`${e.date}T${end}:00`};
 }
-function gBody(e){const t=gTimes(e);return t.allDay?{summary:e.title,start:{date:e.date},end:{date:iso(addDays(parse(e.date),1))}}:{summary:e.title,start:{dateTime:t.startTime,timeZone:TZ},end:{dateTime:t.endTime,timeZone:TZ}}}
+function gBody(e){const t=gTimes(e);return t.allDay?{summary:e.title,reminders:gRem(e),start:{date:e.date},end:{date:iso(addDays(parse(e.date),1))}}:{summary:e.title,reminders:gRem(e),start:{dateTime:t.startTime,timeZone:TZ},end:{dateTime:t.endTime,timeZone:TZ}}}
 // events made here carry a marker so Google edits flow back and nothing shows twice
 function gLinkAndPull(){
   for(const ev of gEvents){
     const mk=/\[ws:([^\]]+)\]/.exec(ev?.description||""); if(!mk)continue;
     const it=appItems.find(x=>x.id===mk[1]); if(!it)continue;
     const s0=ev.start||{}, e0=ev.end||{};
-    const g={title:clean(ev.summary||it.title,120),date:String(s0.dateTime||s0.date||"").slice(0,10),t:s0.dateTime?String(s0.dateTime).slice(11,16):"",end:s0.dateTime?String(e0.dateTime||"").slice(11,16):""};
+    const g={title:clean(ev.summary||it.title,120),date:String(s0.dateTime||s0.date||"").slice(0,10),t:s0.dateTime?String(s0.dateTime).slice(11,16):"",end:s0.dateTime?String(e0.dateTime||"").slice(11,16):"",remind:it.remind};
     if(!/^\d{4}-\d{2}-\d{2}$/.test(g.date))continue;
     if(!it.gid){setItem(it.id,{gid:ev.id,gsig:gsig(it)});continue}
     if(it.gid===ev.id&&it.gsig===gsig(it)&&gsig(g)!==it.gsig){setItem(it.id,{...g,gsig:gsig(g)});render()}
@@ -897,7 +900,7 @@ async function gPush(){
       if(e.example||e.date<from)continue;
       if(!e.gid&&!e.gpush){
         setItem(e.id,{gpush:Date.now()});
-        const r=await gFetch(GAPI,{method:"POST",body:JSON.stringify({...gBody(e),description:`Added from N's Win Streaks · ${AREAS[e.area]?.n||""}\n[ws:${e.id}]`,reminders:{useDefault:true}})});
+        const r=await gFetch(GAPI,{method:"POST",body:JSON.stringify({...gBody(e),description:`Added from N's Win Streaks · ${AREAS[e.area]?.n||""}\n[ws:${e.id}]`})});
         if(r&&typeof r.id==="string")setItem(e.id,{gid:r.id,gsig:gsig(e)}); changed=true;
       } else if(e.gid&&e.gsig!==gsig(e)){
         await gFetch(GAPI+"/"+encodeURIComponent(e.gid),{method:"PATCH",body:JSON.stringify(gBody(e))});
@@ -1344,6 +1347,7 @@ function addView(){
     <div class="row3"><div class="field"><label for="f-date">Date</label><input id="f-date" type="date" value="${esc(draft.date)}"></div>
       <div class="field"><label for="f-t">Start</label><input id="f-t" type="time" value="${esc(draft.t)}"></div>
       <div class="field"><label for="f-end">End</label><input id="f-end" type="time" value="${esc(draft.end)}"></div></div>
+    <div class="field"><label for="f-remind">Notify me</label><select id="f-remind">${REMINDS.map(([v,n])=>`<option value="${v}" ${String(draft.remind??"")===String(v)?"selected":""}>${n}</option>`).join("")}</select></div>
     ${draft.editId?"":`<div class="row2"><div class="field"><label for="f-repeat">Repeat</label><select id="f-repeat">${[["none","Just once"],["daily","Every day"],["weekdays","Sun–Thu"],["weekly","Every week"]].map(([k,n])=>`<option value="${k}" ${draft.repeat===k?"selected":""}>${n}</option>`).join("")}</select></div>
       ${draft.repeat==="none"?"":`<div class="field"><label for="f-times">${draft.repeat==="weekly"?"For how many weeks":"For how many days"}</label><input id="f-times" type="number" min="1" max="12" value="${esc(draft.times)}"></div>`}</div>`}
     ${unit?`<div class="field"><label for="f-amount">${unit==="km"?"Distance (km)":"Amount (₪)"}</label><input id="f-amount" type="number" min="0" step="any" inputmode="decimal" value="${esc(draft.amount)}"></div>`:""}
@@ -1379,7 +1383,7 @@ function sheetHTML(e){
   return `<div class="grab"></div>
     <span class="tag" style="${cv(e.area)};margin:0">${AREAS[e.area].n}</span>${e.example?` <span class="tag ex" style="margin:0">Example</span>`:""}
     <h3>${esc(e.title)}</h3>
-    <dl class="facts"><dt>When</dt><dd>${label(e.date)}${e.t?" · "+esc(e.t)+(e.end?"–"+esc(e.end):""):""}</dd><dt>Status</dt><dd>${status}</dd>${e.amount?`<dt>${unit==="km"?"Distance":"Amount"}</dt><dd>${esc(fmtAmt(e.area,e.amount))}</dd>`:""}</dl>
+    <dl class="facts"><dt>When</dt><dd>${label(e.date)}${e.t?" · "+esc(e.t)+(e.end?"–"+esc(e.end):""):""}</dd><dt>Notify</dt><dd>${esc(remindLabel(e.remind))}</dd><dt>Status</dt><dd>${status}</dd>${e.amount?`<dt>${unit==="km"?"Distance":"Amount"}</dt><dd>${esc(fmtAmt(e.area,e.amount))}</dd>`:""}</dl>
     ${e.notes?`<p>${esc(e.notes)}</p>`:""}
     <div class="actions"><button class="btn ${e.done?"":"go"}" data-check="${esc(e.id)}">${e.done?"Mark not done":"Mark done"}</button>
       ${e.done?"":`<button class="btn" data-moveto="${esc(e.id)}|${tomorrow}">Move to ${label(tomorrow).split(" ")[0]}</button>`}</div>
@@ -1408,7 +1412,7 @@ function readForm(){
   const v=id=>document.getElementById(id)?.value;
   if(!$("#planForm"))return;
   draft={...draft,title:v("f-title")??draft.title,date:v("f-date")??draft.date,t:v("f-t")??draft.t,end:v("f-end")??draft.end,
-    repeat:v("f-repeat")??draft.repeat,times:v("f-times")??draft.times,amount:v("f-amount")??draft.amount,notes:v("f-notes")??draft.notes};
+    repeat:v("f-repeat")??draft.repeat,times:v("f-times")??draft.times,amount:v("f-amount")??draft.amount,notes:v("f-notes")??draft.notes,remind:v("f-remind")??draft.remind};
 }
 function occurrences(date,repeat,times){
   const out=[];let d=parse(date);const n=repeat==="none"?1:Math.min(12,Math.max(1,parseInt(times)||1));
@@ -1423,7 +1427,7 @@ async function submitForm(){
   const miss=[!draft.title.trim()&&"what it is",!draft.date&&"a date"].filter(Boolean);
   if(miss.length){formMsg="Add "+miss.join(" and ")+" first.";render();return}
   formMsg="";
-  const base={title:clean(draft.title,120),area:draft.area,t:draft.t||"",end:draft.end||"",amount:Number(draft.amount)||null,notes:clean(draft.notes,800)};
+  const base={title:clean(draft.title,120),area:draft.area,t:draft.t||"",end:draft.end||"",amount:Number(draft.amount)||null,notes:clean(draft.notes,800),remind:draft.remind==="none"?"none":draft.remind===""||draft.remind==null?"":Number(draft.remind)};
   if(draft.editId){
     await patch(draft.editId,{...base,date:draft.date});
     const d=draft.date;draft=blank();state.day=d;goToDay(d);toast("Saved");return;
@@ -1540,7 +1544,7 @@ document.addEventListener("click",ev=>{
   const mt=t.closest("[data-moveto]");if(mt){const [id,d]=mt.dataset.moveto.split("|");patch(id,{date:d});$(".sheet-bg")?.remove();toast("Moved to "+label(d));return}
   const sn=t.closest("[data-savenote]");if(sn){const p={reflection:clean($("#s-refl")?.value,800)};if($("#s-amt"))p.amount=Number($("#s-amt").value)||null;document.activeElement?.blur();patch(sn.dataset.savenote,p);toast("Note saved");return}
   const ed=t.closest("[data-edit]");if(ed){const e=find(ed.dataset.edit);$(".sheet-bg")?.remove();
-    draft={editId:e.id,title:e.title,area:e.area,date:e.date,t:e.t,end:e.end,repeat:"none",times:1,amount:e.amount??"",notes:e.notes};formMsg="";setView("add");return}
+    draft={editId:e.id,title:e.title,area:e.area,date:e.date,t:e.t,end:e.end,repeat:"none",times:1,amount:e.amount??"",notes:e.notes,remind:e.remind??""};formMsg="";setView("add");return}
   const dl=t.closest("[data-del]");if(dl){const id=dl.dataset.del;if(confirmDel!==id){confirmDel=id;dl.textContent="Tap again to delete";return}
     $(".sheet-bg")?.remove();confirmDel=null;removeIds([id]).then(ok=>ok&&toast("Deleted"));return}
   if(t.closest("[data-fresh]")){dietConfirm=true;render();document.getElementById("dayone")?.focus();return}
