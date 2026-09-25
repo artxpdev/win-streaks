@@ -1,4 +1,4 @@
-# Win Streaks
+# My Win Streaks
 
 A personal life planner that works as an app on your phone: plan across eight areas of life, tick things off, and see your daily and weekly wins.
 

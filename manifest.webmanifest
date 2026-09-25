@@ -1,6 +1,6 @@
 {
-  "name": "Win Streaks",
-  "short_name": "Win Streaks",
+  "name": "My Win Streaks",
+  "short_name": "My Win Streaks",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

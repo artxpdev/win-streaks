@@ -6,13 +6,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Win Streaks">
+<meta name="apple-mobile-web-app-title" content="My Win Streaks">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <style>:root{box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Win Streaks</title>
+<title>My Win Streaks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -729,6 +729,8 @@ button{font-family:inherit}
 
 .namecard input{width:120px;font:14px var(--body);color:var(--ink);background:var(--chip);border:1.5px solid transparent;border-radius:10px;padding:7px 10px}
 .namecard input:focus{outline:none;border-color:var(--startup)}
+
+.brand span{color:#FF3376!important}
 </style>
 
 </head>
@@ -1115,7 +1117,7 @@ function saveTodoEdit(){
 }
 // each person can put their own name on the app; stored only on their phone
 function myName(){try{const n=localStorage.getItem("ws-name");if(n!==null)return n;return localStorage.getItem("ws-gon")==="1"?"N":""}catch(e){return ""}}
-function appTitle(){const n=myName().trim();return n?`${n}'s Win Streaks`:"Win Streaks"}
+function appTitle(){const n=myName().trim();return n?`${n}'s Win Streaks`:"My Win Streaks"}
 function googleVisible(){try{return localStorage.getItem("ws-gon")==="1"||/[?&]google\b/.test(location.search)}catch(e){return false}}
 function exportBackup(){
   const data={app:"n-win-streaks",version:1,exportedAt:new Date().toISOString(),items:appItems,todos,diet,gMeta};
@@ -1700,7 +1702,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="27";
+const APP_VERSION="28";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
