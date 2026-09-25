@@ -842,7 +842,15 @@ async function gRefresh(){
   if(!gTok||Date.now()>gTok.exp){gExpired();return}
   const from=iso(addDays(TODAY,-45))>SYNC_FROM?iso(addDays(TODAY,-45)):SYNC_FROM;
   const q=new URLSearchParams({timeMin:from+"T00:00:00+03:00",timeMax:iso(addDays(TODAY,150))+"T00:00:00+03:00",singleEvents:"true",orderBy:"startTime",maxResults:"250",timeZone:TZ});
-  try{const d=await gFetch(GAPI+"?"+q);gEvents=Array.isArray(d?.items)?d.items:[];gState={s:"ok",msg:""};gRebuild();gLinkAndPull();gSchedulePush()}
+  try{
+    let all=[], tok="", complete=false; const started=Date.now();
+    for(let i=0;i<6;i++){const d=await gFetch(GAPI+"?"+q+(tok?"&pageToken="+encodeURIComponent(tok):""));all=all.concat(Array.isArray(d?.items)?d.items:[]);tok=d?.nextPageToken||"";if(!tok){complete=true;break}}
+    gEvents=all; gState={s:"ok",msg:""};
+    // an event made here but deleted in Google is removed here too
+    if(complete){const to=iso(addDays(TODAY,150)), ids=new Set(all.map(e=>e.id));
+      const gone=appItems.filter(x=>x.gid&&(x.gpush||0)<started-2000&&x.date>=from&&x.date<to&&!ids.has(x.gid)).map(x=>x.id);
+      if(gone.length){appItems=appItems.filter(x=>!gone.includes(x.id));remerge();try{localStorage.setItem("daybook-items",JSON.stringify(appItems))}catch(e){}}}
+    gRebuild();gLinkAndPull();gSchedulePush()}
   catch(e){if(e?.code==="expired")gExpired();else{gState={s:"error",msg:"Couldn't reach Google Calendar"};render()}}
 }
 function gRebuild(){
