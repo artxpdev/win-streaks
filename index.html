@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <style>:root{box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>N's Win Streaks</title>
+<title>Win Streaks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -726,6 +726,9 @@ button{font-family:inherit}
 /* the tab you're on: vibrant green */
 .tab[aria-selected="true"]{color:#0DA24E!important;font-weight:700!important}
 .tab.add[aria-selected="true"] svg{background:#0DA24E!important;color:#fff!important}
+
+.namecard input{width:120px;font:14px var(--body);color:var(--ink);background:var(--chip);border:1.5px solid transparent;border-radius:10px;padding:7px 10px}
+.namecard input:focus{outline:none;border-color:var(--startup)}
 </style>
 
 </head>
@@ -962,7 +965,7 @@ async function gPush(){
       if(e.example||e.date<from)continue;
       if(!e.gid&&!e.gpush){
         setItem(e.id,{gpush:Date.now()});
-        const r=await gFetch(GAPI,{method:"POST",body:JSON.stringify({...gBody(e),description:`Added from N's Win Streaks · ${AREAS[e.area]?.n||""}\n[ws:${e.id}]`})});
+        const r=await gFetch(GAPI,{method:"POST",body:JSON.stringify({...gBody(e),description:`Added from Win Streaks · ${AREAS[e.area]?.n||""}\n[ws:${e.id}]`})});
         if(r&&typeof r.id==="string")setItem(e.id,{gid:r.id,gsig:gsig(e)}); changed=true;
       } else if(e.gid&&e.gsig!==gsig(e)){
         await gFetch(GAPI+"/"+encodeURIComponent(e.gid),{method:"PATCH",body:JSON.stringify(gBody(e))});
@@ -1110,6 +1113,10 @@ function saveTodoEdit(){
   const t=todos.find(x=>x.id===id); if(!t||!v||v===t.title){render();return}
   patchTodo(id,{title:v}); if(t.eventId&&find(t.eventId))patch(t.eventId,{title:v}); toast("Saved");
 }
+// each person can put their own name on the app; stored only on their phone
+function myName(){try{const n=localStorage.getItem("ws-name");if(n!==null)return n;return localStorage.getItem("ws-gon")==="1"?"N":""}catch(e){return ""}}
+function appTitle(){const n=myName().trim();return n?`${n}'s Win Streaks`:"Win Streaks"}
+function googleVisible(){try{return localStorage.getItem("ws-gon")==="1"||/[?&]google\b/.test(location.search)}catch(e){return false}}
 function exportBackup(){
   const data={app:"n-win-streaks",version:1,exportedAt:new Date().toISOString(),items:appItems,todos,diet,gMeta};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:"application/json"}));
@@ -1172,7 +1179,7 @@ async function initSample(){
 function header(sub){
   const gl=gState.s==="connect"?`<button class="gconn" data-gconnect>Connect Google Calendar</button>`:gState.s==="ok"?`<small class="gs ok">Google Calendar synced</small>`:gState.s==="loading"?`<small class="gs">Connecting Google…</small>`:gState.s==="error"?`<small class="gs err">${esc(gState.msg)}</small>`:"";
   const sync=dbState==="live"?`<b>Saved</b>private to you${gl}`:dbState==="local"?`<b>Saved</b>on this phone${gl}`:`<b>Loading…</b>`;
-  return `<div class="head"><div><div class="brand">N's Win Streaks<span>.</span></div>${sub?`<div class="sub">${sub}</div>`:""}</div></div>`;
+  return `<div class="head"><div><div class="brand">${esc(appTitle())}<span>.</span></div>${sub?`<div class="sub">${sub}</div>`:""}</div></div>`;
 }
 function chips(){
   return `<div class="chips">${[["all","All"],...Object.entries(AREAS).map(([k,v])=>[k,v.n])].map(([k,n])=>`<button class="chip" data-area="${k}" aria-pressed="${state.area===k}" ${k!=="all"?`style="${cv(k)}"`:""}>${k!=="all"?`<span class="dot"></span>`:""}${n}</button>`).join("")}</div>`;
@@ -1409,7 +1416,8 @@ function recordView(){
   h+=`<div class="group"><span>Last 12 weeks</span><span>Sun → Sat, top to bottom</span></div><div class="heat" aria-label="Completed entries per day, last 12 weeks">${cells}</div>
     <div class="heatkey"><span>${label(iso(start))}</span><span>0 <i style="background:var(--chip)"></i><i class="" style="background:color-mix(in srgb,var(--done) 30%,var(--chip))"></i><i style="background:color-mix(in srgb,var(--done) 80%,var(--chip))"></i><i style="background:var(--done)"></i> 4+</span></div>`;
   h+=ledger();
-  h+=`<div class="gcard"><div><b>Google Calendar</b><small>${gState.s==="ok"?"Synced":gState.s==="error"?esc(gState.msg):"Not connected"}</small></div>${gState.s==="ok"?"":`<button class="small" data-gconnect>Connect</button>`}</div>`;
+  h+=`<div class="gcard namecard"><div><b>Your name</b><small>Shown at the top: "${esc(appTitle())}"</small></div><input id="myName" maxlength="20" placeholder="Optional" value="${esc(myName())}" aria-label="Your name"></div>`;
+  if(googleVisible())h+=`<div class="gcard"><div><b>Google Calendar</b><small>${gState.s==="ok"?"Synced":gState.s==="error"?esc(gState.msg):"Not connected"}</small></div>${gState.s==="ok"?"":`<button class="small" data-gconnect>Connect</button>`}</div>`;
   h+=`<div class="backup"><button class="small" data-export>Export backup</button><label class="small" for="importFile">Import backup</label><input type="file" id="importFile" accept="application/json,.json" hidden></div>`;
   if(items.some(e=>e.example))h+=`<div class="clear"><button class="small danger" data-clear>${confirmClear?"Tap again to delete all examples":"Clear example entries"}</button></div>`;
   return h;
@@ -1674,7 +1682,7 @@ document.addEventListener("click",ev=>{
 document.addEventListener("focusout",ev=>{if(ev.target.id==="tedit"&&todoEdit)setTimeout(saveTodoEdit,0)});
 document.addEventListener("submit",ev=>{if(ev.target.id==="schedForm"){ev.preventDefault();scheduleTodo();return}if(ev.target.id==="todoForm"){ev.preventDefault();const v=$("#todoIn")?.value||"";todoDraft="";addTodo(v);setTimeout(()=>$("#todoIn")?.focus(),0);return}if(ev.target.id==="planForm"){ev.preventDefault();submitForm()}});
 document.addEventListener("change",ev=>{if(ev.target.id==="importFile"&&ev.target.files?.[0]){importBackup(ev.target.files[0]);ev.target.value="";return}if(ev.target.id==="f-repeat"){readForm();if(draft.repeat==="days"&&!(draft.days||[]).length)draft.days=[parse(draft.date||T).getDay()];render()}});
-document.addEventListener("input",ev=>{if(ev.target.id==="todoIn"){todoDraft=ev.target.value;return}if(ev.target.id==="quick")quickText=ev.target.value;else if(ev.target.closest("#planForm"))readForm()});
+document.addEventListener("input",ev=>{if(ev.target.id==="myName"){try{localStorage.setItem("ws-name",ev.target.value.slice(0,20))}catch(e){}const b=document.querySelector(".brand");if(b)b.firstChild.textContent=appTitle();document.title=appTitle();return}if(ev.target.id==="todoIn"){todoDraft=ev.target.value;return}if(ev.target.id==="quick")quickText=ev.target.value;else if(ev.target.closest("#planForm"))readForm()});
 document.addEventListener("keydown",ev=>{
   if(ev.target.id==="tedit"){if(ev.key==="Enter"){ev.preventDefault();saveTodoEdit()}else if(ev.key==="Escape"){todoEdit=null;render()}return}
   if(ev.key==="Enter"&&ev.target.matches("[data-open]"))openSheet(ev.target.dataset.open);
@@ -1688,11 +1696,11 @@ $("#statusDate").textContent=`· ${WD[TODAY.getDay()]} ${TODAY.getDate()} ${MO[T
  const CLOUD='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/></svg>';
  $("#wx").innerHTML=`${wet?CLOUD:SUN}<span>Tel Aviv · ~${HI[m]}°</span>`;}
 render();
-dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle();
+dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appTitle();render();initGoogle();
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="26";
+const APP_VERSION="27";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
