@@ -736,6 +736,11 @@ button{font-family:inherit}
 :root{--social:#FFAAF1}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--social:#FFAAF1}}
 :root[data-theme="dark"]{--social:#FFAAF1}
+
+/* Gym colour */
+:root{--gym:#CDB8F0}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--gym:#BBA3E6}}
+:root[data-theme="dark"]{--gym:#BBA3E6}
 </style>
 
 </head>
@@ -759,6 +764,7 @@ button{font-family:inherit}
 <script>
 const AREAS={
   running:{n:"Run",unit:"km",how:"Each run, with kilometres"},
+  gym:{n:"Gym",how:"Workouts, classes, weights"},
   social:{n:"Social",how:"Friends, family, parties, and hosting people at home"},
   income:{n:"Income",unit:"₪",how:"Paid work, invoices, proposals, with amounts"},
   networking:{n:"Networking",how:"Meetings with valuable networks"},
@@ -783,6 +789,7 @@ const clean=(v,n)=>String(v??"").trim().slice(0,n);
 const cv=a=>`--c:var(--${a})`;
 const fmtAmt=(a,v)=>!v?"":a==="income"?"₪"+Number(v).toLocaleString("en-US"):`${+v} ${AREAS[a].unit||""}`.trim();
 const ICONS={
+  gym:'<path d="M3 10v4M6.5 7.5v9M17.5 7.5v9M21 10v4M6.5 12h11"/>',
   bdays:'<path d="M4 20h16v-6.5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"/><path d="M4 15.5c1.3 1 2.7 1 4 0s2.7-1 4 0 2.7 1 4 0 2.7-1 4 0"/><path d="M12 11.5V8"/><path d="M12 4.2c.9.9.9 2 0 2.8-.9-.8-.9-1.9 0-2.8z"/>',
   networking:'<circle cx="6" cy="7" r="2.6"/><circle cx="18" cy="7" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.6 7h6.8M7.2 9.3l3.6 6.4M16.8 9.3l-3.6 6.4"/>',
   startup:'<path d="M12 3c3.2 2.2 5 6.3 4 11l-2 2h-4l-2-2c-1-4.7.8-8.8 4-11z"/><circle cx="12" cy="9.5" r="1.7"/><path d="M8.2 13.5 5 15.5l1 3.5 3.2-1.5M15.8 13.5l3.2 2-1 3.5-3.2-1.5M11 18.5l1 2.5 1-2.5"/>',
@@ -877,7 +884,7 @@ const gsig=e=>[e.title,e.date,e.t||"",e.end||""].join("|")+(e.remind!==""&&e.rem
 const REMINDS=[["","Calendar default"],["none","No reminder"],[0,"At start"],[10,"10 min before"],[30,"30 min before"],[60,"1 hour before"],[120,"2 hours before"],[1440,"1 day before"]];
 const remindLabel=r=>(REMINDS.find(([v])=>String(v)===String(r))||REMINDS[0])[1];
 function gRem(e){return e.remind==="none"?{useDefault:false,overrides:[]}:e.remind===""||e.remind==null?{useDefault:true}:{useDefault:false,overrides:[{method:"popup",minutes:Number(e.remind)}]}}
-const AREA_RX=[["bdays",/birthday|b-?day|יום הולדת|יומולדת/i],["running",/\brun\b|running|ריצה|marathon|\b\d+ ?k\b|parkrun|\bjog/i],["love",/\bdate\b|date night|❤|anniversary|\blove\b/i],
+const AREA_RX=[["gym",/\bgym\b|workout|crossfit|weights|pilates|spinning|\btrx\b|hiit|boxing|חדר כושר/i],["bdays",/birthday|b-?day|יום הולדת|יומולדת/i],["running",/\brun\b|running|ריצה|marathon|\b\d+ ?k\b|parkrun|\bjog/i],["love",/\bdate\b|date night|❤|anniversary|\blove\b/i],
   ["wellbeing",/psycholog|therap|podcast|course|class|lesson|workshop|lecture|learn|reading|book club|meditat|yoga/i],["social",/dinner|party|birthday|drinks|friends|family|bbq|brunch|hosting|wedding|shabbat/i],
   ["networking",/meeting|coffee|\bintro|lunch|call with|1:1|1-1|mentor|catch ?up/i],["startup",/meetup|demo day|conference|pitch|founder|startup|hackathon|summit|webinar|\bevent\b|expo/i],
   ["income",/invoice|client|proposal|workday|\bwork\b|office|payment|project/i]];
@@ -1340,6 +1347,7 @@ const CHEERS={
   running:["Legs: 1. Couch: 0.","Your calves are famous now","Strava is shaking"],
   startup:["Unicorn behaviour","Investors are sweating","Founder mode: on"],
   networking:["Connector energy","Your network is your net worth","LinkedIn could never"],
+  gym:["Stronger than yesterday","Muscles loading…","The gym misses you already"],
   bdays:["Best friend energy","Birthday hero","They'll remember you remembered"],
   social:["Social butterfly unlocked","Main character energy","The group chat is proud"],
   love:["Heart eyes activated","Cupid is taking notes","Love life: levelling up"],
@@ -1707,7 +1715,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="30";
+const APP_VERSION="31";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
