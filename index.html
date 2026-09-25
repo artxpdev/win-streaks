@@ -743,11 +743,11 @@ const AREAS={
   social:{n:"Social",how:"Friends, family, parties, and hosting people at home"},
   income:{n:"Income",unit:"₪",how:"Paid work, invoices, proposals, with amounts"},
   love:{n:"Love",how:"Dates, time together"},
-  wellbeing:{n:"Well-being",how:"Meditation, sleep, therapy, time off"},
+  networking:{n:"Networking",how:"Meetings with valuable networks"},
   admin:{n:"Life admin",how:"Bills, forms, appointments, errands"},
   startup:{n:"Startup",how:"Startup events you attend: meetups, conferences, demo days, networking"},
-  networking:{n:"Networking",how:"Meetings with valuable networks"},
-  bdays:{n:"Bdays",how:"Birthdays to remember and celebrate"}
+  bdays:{n:"Bdays",how:"Birthdays to remember and celebrate"},
+  wellbeing:{n:"Growth",how:"Psychologist, learning something new, podcasts, reading"}
 };
 const pad=n=>String(n).padStart(2,"0");
 const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -859,7 +859,7 @@ const REMINDS=[["","Calendar default"],["none","No reminder"],[0,"At start"],[10
 const remindLabel=r=>(REMINDS.find(([v])=>String(v)===String(r))||REMINDS[0])[1];
 function gRem(e){return e.remind==="none"?{useDefault:false,overrides:[]}:e.remind===""||e.remind==null?{useDefault:true}:{useDefault:false,overrides:[{method:"popup",minutes:Number(e.remind)}]}}
 const AREA_RX=[["bdays",/birthday|b-?day|יום הולדת|יומולדת/i],["running",/\brun\b|running|ריצה|marathon|\b\d+ ?k\b|parkrun|\bjog/i],["love",/\bdate\b|date night|❤|anniversary|\blove\b/i],
-  ["wellbeing",/yoga|meditat|therap|\bgym\b|pilates|massage|doctor|dentist|\bswim|sleep|\bspa\b/i],["social",/dinner|party|birthday|drinks|friends|family|bbq|brunch|hosting|wedding|shabbat/i],
+  ["wellbeing",/psycholog|therap|podcast|course|class|lesson|workshop|lecture|learn|reading|book club|meditat|yoga/i],["social",/dinner|party|birthday|drinks|friends|family|bbq|brunch|hosting|wedding|shabbat/i],
   ["networking",/meeting|coffee|\bintro|lunch|call with|1:1|1-1|mentor|catch ?up/i],["startup",/meetup|demo day|conference|pitch|founder|startup|hackathon|summit|webinar|\bevent\b|expo/i],
   ["income",/invoice|client|proposal|workday|\bwork\b|office|payment|project/i]];
 const guessArea=t=>(AREA_RX.find(([,r])=>r.test(t))||["admin"])[0];
@@ -1321,7 +1321,7 @@ const CHEERS={
   social:["Social butterfly unlocked","Main character energy","The group chat is proud"],
   love:["Heart eyes activated","Cupid is taking notes","Love life: levelling up"],
   diet:["Vegetables fear you","Chef's kiss","Your gut says thank you"],
-  wellbeing:["Inner peace: achieved","Zen level: monk","Breathe in, show off"],
+  wellbeing:["Big brain energy","Growing, one step at a time","Future you is grateful"],
   income:["Ka-ching!","Money moves only","Invoice queen"],
   admin:["Adulting unlocked","Bureaucracy defeated","Future you says thanks"]
 };
@@ -1677,7 +1677,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="19";
+const APP_VERSION="20";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
