@@ -16,6 +16,12 @@
 .gcard b{display:block;font:600 14px var(--body)}
 .gcard small{font-size:12px;color:var(--muted)}
 .head{justify-content:flex-start!important}
+
+.mlist-head{display:flex;justify-content:space-between;margin-top:22px;padding-bottom:6px;border-bottom:1px solid var(--ink);font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.mday-group{border-radius:14px;padding:0 8px 6px;margin:0 -8px;transition:background .2s}
+.mday-group.sel{background:var(--daysel)}
+.mday-group.past .n{color:var(--muted)}
+.mday-group .group{margin-top:14px}
 </style>
 <title>N's Win Streaks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1195,14 +1201,18 @@ function monthView(){
     h+=`<button class="mday ${k===T?"is-today":""} ${hd?"hol":""}" data-mday="${k}" aria-pressed="${state.day===k}" title="${esc(hd?.[2]||"")}" aria-label="${label(k)}${list.length?`, ${list.length} planned`:""}${hd?", "+esc(hd[2]):""}">
       <b>${d}</b><i>${list.slice(0,6).map(e=>`<em class="${e.done?"on":""}" style="${cv(e.area)}"></em>`).join("")}</i></button>`}
   h+=`</div>`;
-  if(state.day>=a&&state.day<=b){
-    const list=mItems.filter(e=>e.date===state.day).sort(byTime), hd=holidayOn(state.day);
-    h+=`<div class="group"><span>${state.day===T?"Today · ":""}${label(state.day)}</span><button class="small mopen" data-openday="${state.day}">Open day</button></div>
-      ${hd?`<div class="whol">${esc(hd[2])}</div>`:""}
-      ${list.length?list.map(e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+  // the whole month, day by day; the tapped day is highlighted and scrolled to
+  const row=e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
         <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
-        <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`).join(""):`<div class="wempty">Nothing planned. <button class="fresh" data-go="add">Plan something</button></div>`}`;
-  }
+        <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`;
+  const dates=[...new Set(mItems.map(e=>e.date))]; if(state.day>=a&&state.day<=b&&!dates.includes(state.day))dates.push(state.day); dates.sort();
+  h+=`<div class="mlist-head"><span>All of ${MONTHS[m]}</span><span>${mItems.length} ${mItems.length===1?"event":"events"}</span></div>`;
+  h+=dates.length?dates.map(d=>{const list=mItems.filter(e=>e.date===d).sort(byTime), hd=holidayOn(d);
+    return `<section class="mday-group ${d===state.day?"sel":""} ${d<T?"past":""}" id="mg-${d}">
+      <div class="group"><span>${d===T?"Today · ":""}${label(d)}</span><button class="small mopen" data-openday="${d}">Open day</button></div>
+      ${hd?`<div class="whol">${esc(hd[2])}</div>`:""}
+      ${list.length?list.map(row).join(""):`<div class="wempty">Nothing planned. <button class="fresh" data-go="add">Plan something</button></div>`}
+    </section>`}).join(""):`<div class="empty">Nothing planned in ${MONTHS[m]} yet.</div>`;
   return h;
 }
 function rangeBounds(){
@@ -1560,7 +1570,7 @@ document.addEventListener("click",ev=>{
   const ar=t.closest("[data-area]");if(ar){state.area=ar.dataset.area;render();return}
   const rg=t.closest("[data-range]");if(rg){state.range=rg.dataset.range;render();return}
   const mo=t.closest("[data-month]");if(mo){shiftMonth(+mo.dataset.month);return}
-  const md=t.closest("[data-mday]");if(md){state.day=md.dataset.mday;render();return}
+  const md=t.closest("[data-mday]");if(md){state.day=md.dataset.mday;render();const g=document.getElementById("mg-"+state.day);if(g){const sc=$("#scroll");sc.scrollTo({top:g.offsetTop-sc.offsetTop-8,behavior:"smooth"})}return}
   const od=t.closest("[data-openday]");if(od){const d=od.dataset.openday;state.day=d;state.weekStart=iso(weekOf(parse(d)));setView("day");return}
   const wk=t.closest("[data-week]");if(wk){shiftWeek(+wk.dataset.week);return}
   const dy=t.closest("[data-day]");if(dy){state.day=dy.dataset.day;render();return}
@@ -1589,7 +1599,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="6";
+const APP_VERSION="7";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
