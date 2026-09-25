@@ -792,7 +792,7 @@ async function removeIds(ids){
   return true;
 }
 // ---------- Google Calendar sync: your own Google sign-in, straight from this phone to Google ----------
-const GOOGLE_CLIENT_ID=""; // filled in after the Google Cloud setup
+const GOOGLE_CLIENT_ID="1010851188856-244362ebhaplgkbl9760um8tusj6b9vi.apps.googleusercontent.com"; // your Google Cloud OAuth client (public by design)
 const TZ="Asia/Jerusalem", GAPI="https://www.googleapis.com/calendar/v3/calendars/primary/events", GSCOPE="https://www.googleapis.com/auth/calendar.events";
 const SYNC_FROM="2026-09-25"; // nothing older than this is pulled in
 let gEvents=[], gMeta={}, gState={s:"off",msg:""}, gBusy=false, gPushTimer=0, gStopPush=false, gTok=null;
