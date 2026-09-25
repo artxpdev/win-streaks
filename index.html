@@ -22,6 +22,10 @@
 .mday-group.sel{background:var(--daysel)}
 .mday-group.past .n{color:var(--muted)}
 .mday-group .group{margin-top:14px}
+
+.rdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.rday{border:1px solid var(--line);background:var(--phone);color:var(--ink);border-radius:10px;padding:8px 0;font:500 11px var(--mono);text-transform:uppercase;cursor:pointer}
+.rday[aria-pressed="true"]{background:var(--ink);color:var(--phone);border-color:var(--ink)}
 </style>
 <title>N's Win Streaks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1358,8 +1362,9 @@ function addView(){
       <div class="field"><label for="f-t">Start</label><input id="f-t" type="time" value="${esc(draft.t)}"></div>
       <div class="field"><label for="f-end">End</label><input id="f-end" type="time" value="${esc(draft.end)}"></div></div>
     <div class="field"><label for="f-remind">Notify me</label><select id="f-remind">${REMINDS.map(([v,n])=>`<option value="${v}" ${String(draft.remind??"")===String(v)?"selected":""}>${n}</option>`).join("")}</select></div>
-    ${draft.editId?"":`<div class="row2"><div class="field"><label for="f-repeat">Repeat</label><select id="f-repeat">${[["none","Just once"],["daily","Every day"],["weekdays","Sun–Thu"],["weekly","Every week"]].map(([k,n])=>`<option value="${k}" ${draft.repeat===k?"selected":""}>${n}</option>`).join("")}</select></div>
-      ${draft.repeat==="none"?"":`<div class="field"><label for="f-times">${draft.repeat==="weekly"?"For how many weeks":"For how many days"}</label><input id="f-times" type="number" min="1" max="12" value="${esc(draft.times)}"></div>`}</div>`}
+    ${draft.editId?"":`<div class="row2"><div class="field"><label for="f-repeat">Repeat</label><select id="f-repeat">${[["none","Just once"],["daily","Every day"],["weekdays","Sun–Thu"],["weekly","Every week"],["days","Weekly on chosen days"]].map(([k,n])=>`<option value="${k}" ${draft.repeat===k?"selected":""}>${n}</option>`).join("")}</select></div>
+      ${draft.repeat==="none"?"":`<div class="field"><label for="f-times">${draft.repeat==="weekly"||draft.repeat==="days"?"For how many weeks":"For how many days"}</label><input id="f-times" type="number" min="1" max="${draft.repeat==="days"?26:12}" value="${esc(draft.times)}"></div>`}</div>
+    ${draft.repeat==="days"?`<div class="field"><span class="legend">On these days</span><div class="rdays">${WD.map((n,i)=>`<button type="button" class="rday" data-rday="${i}" aria-pressed="${(draft.days||[]).includes(i)}">${n}</button>`).join("")}</div></div>`:""}`}
     ${unit?`<div class="field"><label for="f-amount">${unit==="km"?"Distance (km)":"Amount (₪)"}</label><input id="f-amount" type="number" min="0" step="any" inputmode="decimal" value="${esc(draft.amount)}"></div>`:""}
     <div class="field"><label for="f-notes">Notes</label><textarea id="f-notes" maxlength="800">${esc(draft.notes)}</textarea></div>
     <div class="msg err">${esc(formMsg)}</div>
@@ -1424,7 +1429,12 @@ function readForm(){
   draft={...draft,title:v("f-title")??draft.title,date:v("f-date")??draft.date,t:v("f-t")??draft.t,end:v("f-end")??draft.end,
     repeat:v("f-repeat")??draft.repeat,times:v("f-times")??draft.times,amount:v("f-amount")??draft.amount,notes:v("f-notes")??draft.notes,remind:v("f-remind")??draft.remind};
 }
-function occurrences(date,repeat,times){
+function occurrences(date,repeat,times,days){
+  if(repeat==="days"){
+    const weeks=Math.min(26,Math.max(1,parseInt(times)||1)), start=parse(date), ws=weekOf(start), pick=(days&&days.length?days:[start.getDay()]).slice().sort((a,b)=>a-b), out=[];
+    for(let w=0;w<weeks;w++)for(const dw of pick){const d=addDays(ws,w*7+dw);if(d>=start)out.push(iso(d))}
+    return out;
+  }
   const out=[];let d=parse(date);const n=repeat==="none"?1:Math.min(12,Math.max(1,parseInt(times)||1));
   while(out.length<n){
     if(repeat==="weekdays"&&(d.getDay()===5||d.getDay()===6)){d=addDays(d,1);continue}
@@ -1442,7 +1452,7 @@ async function submitForm(){
     await patch(draft.editId,{...base,date:draft.date});
     const d=draft.date;draft=blank();state.day=d;goToDay(d);toast("Saved");return;
   }
-  const dates=occurrences(draft.date,draft.repeat,draft.times), series=dates.length>1?"r"+Date.now():null;
+  const dates=occurrences(draft.date,draft.repeat,draft.times,draft.days), series=dates.length>1?"r"+Date.now():null;
   const err=await createMany(dates.map(date=>({...base,date,done:false,doneAt:null,reflection:"",example:false,createdAt:Date.now(),...(series?{series}:{})})));
   if(err){formMsg=err;render();return}
   const d=draft.date,a=draft.area; draft=blank(); draft.area=a; goToDay(d);
@@ -1535,6 +1545,7 @@ document.addEventListener("pointercancel",()=>{if(swipe&&swipe.els){const sw=swi
 document.addEventListener("click",ev=>{
   if(Date.now()-swipedAt<400){ev.stopPropagation();ev.preventDefault();return}
   const t=ev.target;
+  const rd=t.closest("[data-rday]");if(rd){readForm();const i=+rd.dataset.rday,ds=new Set(draft.days||[]);ds.has(i)?ds.delete(i):ds.add(i);draft.days=[...ds];render();return}
   if(t.closest("[data-gconnect]")){gAuth(false);return}
   if(t.closest("[data-export]")){exportBackup();return}
   const ga=t.closest("[data-garea]");if(ga){patch(ga.dataset.gitem,{area:ga.dataset.garea});return}
@@ -1580,7 +1591,7 @@ document.addEventListener("click",ev=>{
 });
 document.addEventListener("focusout",ev=>{if(ev.target.id==="tedit"&&todoEdit)setTimeout(saveTodoEdit,0)});
 document.addEventListener("submit",ev=>{if(ev.target.id==="schedForm"){ev.preventDefault();scheduleTodo();return}if(ev.target.id==="todoForm"){ev.preventDefault();const v=$("#todoIn")?.value||"";todoDraft="";addTodo(v);setTimeout(()=>$("#todoIn")?.focus(),0);return}if(ev.target.id==="planForm"){ev.preventDefault();submitForm()}});
-document.addEventListener("change",ev=>{if(ev.target.id==="importFile"&&ev.target.files?.[0]){importBackup(ev.target.files[0]);ev.target.value="";return}if(ev.target.id==="f-repeat"){readForm();render()}});
+document.addEventListener("change",ev=>{if(ev.target.id==="importFile"&&ev.target.files?.[0]){importBackup(ev.target.files[0]);ev.target.value="";return}if(ev.target.id==="f-repeat"){readForm();if(draft.repeat==="days"&&!(draft.days||[]).length)draft.days=[parse(draft.date||T).getDay()];render()}});
 document.addEventListener("input",ev=>{if(ev.target.id==="todoIn"){todoDraft=ev.target.value;return}if(ev.target.id==="quick")quickText=ev.target.value;else if(ev.target.closest("#planForm"))readForm()});
 document.addEventListener("keydown",ev=>{
   if(ev.target.id==="tedit"){if(ev.key==="Enter"){ev.preventDefault();saveTodoEdit()}else if(ev.key==="Escape"){todoEdit=null;render()}return}
@@ -1599,7 +1610,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="7";
+const APP_VERSION="8";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
