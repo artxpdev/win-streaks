@@ -717,6 +717,11 @@ button{font-family:inherit}
 .tledger .tok svg{width:15px!important;height:15px!important}
 
 .updot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:6px;vertical-align:1px}
+
+/* All · coming up: commitments filled with their area colour (runs stay plain) */
+.row.filled{background:var(--c)!important;border-color:var(--c)!important}
+.row.filled .n,.row.filled .t{color:#151515}
+.row.filled .check{border-color:rgba(21,21,21,.45)!important;background:rgba(255,255,255,.55)}
 </style>
 
 </head>
@@ -1209,7 +1214,7 @@ function dayView(){
     const dates=[...new Set(up.map(e=>e.date))];
     h+=`<div class="mlist-head" ${all?"":`style="${cv(state.area)}"`}><span>${all?"":`<i class="updot"></i>`}Coming up · ${all?"next 7 days":AREAS[state.area].n}</span><span>${up.length} ${up.length===1?"event":"events"}</span></div>`;
     h+=dates.length?dates.map(d=>`<div class="group"><span>${label(d)}</span><button class="small mopen" data-openday="${d}">Open day</button></div>
-      ${up.filter(e=>e.date===d).map(e=>`<div class="row ${e.done?"is-done":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+      ${up.filter(e=>e.date===d).map(e=>`<div class="row ${e.done?"is-done":""} ${all&&e.area!=="running"&&!e.done?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
         <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
         <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`).join("")}`).join("")
       :`<div class="wempty" style="margin-top:10px">${all?"Nothing planned for the next 7 days.":`Nothing else planned for ${AREAS[state.area].n} yet.`} <button class="fresh" data-go="add">Plan something</button></div>`;
@@ -1683,7 +1688,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="22";
+const APP_VERSION="23";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
