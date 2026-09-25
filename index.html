@@ -715,6 +715,8 @@ button{font-family:inherit}
 .tokens{grid-column:1/-1!important;grid-row:2!important;justify-content:space-between!important;flex-wrap:nowrap!important;margin-top:6px!important;gap:2px!important}
 .tledger .tok{width:26px!important;height:26px!important;flex:none}
 .tledger .tok svg{width:15px!important;height:15px!important}
+
+.updot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:6px;vertical-align:1px}
 </style>
 
 </head>
@@ -1200,6 +1202,18 @@ function dayView(){
     const open=items.filter(e=>!e.google&&isMissed(e)&&e.date>=from&&inArea(e)).sort(byTime);
     if(open.length)h+=`<div class="group warn"><span>Still open · last 2 weeks</span><span>${open.length}</span></div><div class="list">${open.map(e=>itemRow(e,{showDate:true,move:true})).join("")}</div>`;
   }
+  // tapped an area: show everything coming up in that area, not just this day
+  if(state.area!=="all"){
+    const from=state.day>T?state.day:T;
+    const up=items.filter(e=>e.area===state.area&&e.date>from).sort(byTime).slice(0,80);
+    const dates=[...new Set(up.map(e=>e.date))];
+    h+=`<div class="mlist-head" style="${cv(state.area)}"><span><i class="updot"></i>Coming up · ${AREAS[state.area].n}</span><span>${up.length} ${up.length===1?"event":"events"}</span></div>`;
+    h+=dates.length?dates.map(d=>`<div class="group"><span>${label(d)}</span><button class="small mopen" data-openday="${d}">Open day</button></div>
+      ${up.filter(e=>e.date===d).map(e=>`<div class="row ${e.done?"is-done":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+        <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
+        <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`).join("")}`).join("")
+      :`<div class="wempty" style="margin-top:10px">Nothing else planned for ${AREAS[state.area].n} yet. <button class="fresh" data-go="add">Plan something</button></div>`;
+  }
   {const dw=winsOn(state.day).length, wk=winsInWeek(iso(weekOf(parse(state.day)))).length;
     const dayAll=items.filter(e=>e.date===state.day&&inArea(e));
     const dayWon=items.filter(e=>e.date===state.day&&e.done);
@@ -1663,7 +1677,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();render();initGoogle
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="17";
+const APP_VERSION="18";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
