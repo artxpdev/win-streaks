@@ -1427,14 +1427,6 @@ function recordView(){
     const all=inR.filter(e=>e.area===k), dn=all.filter(e=>e.done), amt=dn.reduce((s,e)=>s+(e.amount||0),0);
     return `<div class="bar" style="${cv(k)}"><span class="nm"><i></i>${AREAS[k].n}</span><span class="track"><i style="width:${Math.round(dn.length/all.length*100)}%"></i></span><span class="v"><b>${dn.length}</b>/${all.length}${amt?`<br>${esc(fmtAmt(k,amt))}`:""}</span></div>`}).join("");
   h+=`<div class="group"><span>By area · done / planned</span>${ahead?`<span>${ahead} still ahead</span>`:""}</div><div class="bars">${rows||`<div class="empty">No entries ${word}.</div>`}</div>`;
-  // heatmap
-  const start=addDays(weekOf(TODAY),-77); const counts={};
-  items.filter(e=>e.done&&inArea(e)).forEach(e=>counts[e.date]=(counts[e.date]||0)+1);
-  let cells="";
-  for(let i=0;i<84;i++){const d=addDays(start,i),k=iso(d),n=counts[k]||0;
-    cells+=`<i class="${k>T?"fut":n>=4?"l4":n?"l"+n:""} ${k===T?"now":""}" title="${label(k)}: ${n} done"></i>`}
-  h+=`<div class="group"><span>Last 12 weeks</span><span>Sun → Sat, top to bottom</span></div><div class="heat" aria-label="Completed entries per day, last 12 weeks">${cells}</div>
-    <div class="heatkey"><span>${label(iso(start))}</span><span>0 <i style="background:var(--chip)"></i><i class="" style="background:color-mix(in srgb,var(--done) 30%,var(--chip))"></i><i style="background:color-mix(in srgb,var(--done) 80%,var(--chip))"></i><i style="background:var(--done)"></i> 4+</span></div>`;
   h+=ledger();
   h+=`<div class="gcard namecard"><div><b>Your name</b><small>Shown at the top: "${esc(appTitle())}"</small></div><input id="myName" maxlength="20" placeholder="Optional" value="${esc(myName())}" aria-label="Your name"></div>`;
   if(googleVisible())h+=`<div class="gcard"><div><b>Google Calendar</b><small>${gState.s==="ok"?"Synced":gState.s==="error"?esc(gState.msg):"Not connected"}</small></div>${gState.s==="ok"?"":`<button class="small" data-gconnect>Connect</button>`}</div>`;
@@ -1722,7 +1714,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="34";
+const APP_VERSION="35";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
