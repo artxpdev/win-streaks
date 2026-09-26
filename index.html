@@ -825,7 +825,7 @@ const STARTER=[
 
 let items=[], appItems=[], gItems=[], db=null, dbState="loading", sampleApi=null;
 function remerge(){items=[...appItems,...gItems]}
-let state={view:"day",monthStart:iso(new Date(TODAY.getFullYear(),TODAY.getMonth(),1)),day:T,weekStart:iso(weekOf(TODAY)),area:"all",range:"week",winWeek:iso(weekOf(TODAY))};
+let state={view:"day",monthStart:iso(new Date(TODAY.getFullYear(),TODAY.getMonth(),1)),day:T,stripStart:T,weekStart:iso(weekOf(TODAY)),area:"all",range:"week",winWeek:iso(weekOf(TODAY))};
 const blank=()=>({editId:null,title:"",area:"running",date:state.day,t:"08:00",end:"",repeat:"none",times:4,amount:"",notes:"",remind:""});
 let draft=blank(), formMsg="", quickText="", quickMsg="", quickBusy=false, parsed=[], confirmDel=null, confirmClear=false, toastTimer;
 
@@ -1199,7 +1199,7 @@ function chips(){
   return `<div class="chips">${[["all","All"],...Object.entries(AREAS).map(([k,v])=>[k,v.n])].map(([k,n])=>`<button class="chip" data-area="${k}" aria-pressed="${state.area===k}" ${k!=="all"?`style="${cv(k)}"`:""}>${k!=="all"?`<span class="dot"></span>`:""}${n}</button>`).join("")}</div>`;
 }
 function strip(){
-  const ws=parse(state.weekStart), days=[...Array(7)].map((_,i)=>addDays(ws,i));
+  const ws=parse(state.stripStart), days=[...Array(7)].map((_,i)=>addDays(ws,i));
   return `<div class="week"><button data-week="-7" aria-label="Previous week">‹</button><span>${days[0].getDate()} ${MO[days[0].getMonth()]} – ${days[6].getDate()} ${MO[days[6].getMonth()]}</span><button data-week="7" aria-label="Next week">›</button></div>
   <div class="days ${slideDir?"slide-"+slideDir:""}">${days.map(d=>{const k=iso(d);const list=items.filter(e=>e.date===k&&inArea(e)).sort(byTime).slice(0,5);
     return `<button class="day ${k===T?"is-today":""} ${holidayOn(k)?"hol":""}" title="${esc(holidayOn(k)?.[2]||"")}" data-day="${k}" aria-pressed="${state.day===k}"><small>${WD[d.getDay()]}</small><strong>${d.getDate()}</strong><i>${list.map(e=>`<b class="${e.done?"on":""}" style="${cv(e.area)}"></b>`).join("")}</i></button>`}).join("")}</div>`;
@@ -1556,7 +1556,8 @@ async function submitForm(){
   const d=draft.date,a=draft.area; draft=blank(); draft.area=a; goToDay(d);
   toast(dates.length>1?`Added ${dates.length} entries`:"Added to calendar");
 }
-function goToDay(d){state.day=d;const ws=parse(state.weekStart);if(parse(d)<ws||parse(d)>addDays(ws,6))state.weekStart=iso(weekOf(parse(d)));state.area="all";setView("day")}
+function showInStrip(d){const ws=parse(state.stripStart),x=parse(d);if(x<ws)state.stripStart=iso(addDays(x,-6));else if(x>addDays(ws,6))state.stripStart=d}
+function goToDay(d){state.day=d;showInStrip(d);state.area="all";setView("day")}
 async function runQuick(){
   quickText=$("#quick")?.value||"";
   if(!quickText.trim()){quickMsg="!Write at least one plan first.";render();return}
@@ -1597,9 +1598,10 @@ document.getElementById("scroll").addEventListener("scroll",ev=>{
 
 // ---------- swipe the dates ----------
 let slideDir="", swipe=null, swipedAt=0, dayShift=false;
-function shiftDay(n,quiet){const d=addDays(parse(state.day),n);state.day=iso(d);const ws=parse(state.weekStart);
-  if(d<ws||d>addDays(ws,6))state.weekStart=iso(weekOf(d));slideDir=quiet?"":n>0?"next":"prev";dayShift=true;render();slideDir="";dayShift=false}
-function shiftWeek(n,quiet){const ws=addDays(parse(state.weekStart),n);state.weekStart=iso(ws);
+function shiftDay(n,quiet){const d=addDays(parse(state.day),n);state.day=iso(d);showInStrip(state.day);slideDir=quiet?"":n>0?"next":"prev";dayShift=true;render();slideDir="";dayShift=false}
+function shiftWeek(n,quiet){
+  if(state.view==="day"){const ws=addDays(parse(state.stripStart),n);state.stripStart=iso(ws);
+    state.day=(T>=iso(ws)&&T<=iso(addDays(ws,6)))?T:iso(ws);slideDir=quiet?"":n>0?"next":"prev";render();slideDir="";return}const ws=addDays(parse(state.weekStart),n);state.weekStart=iso(ws);
   state.day=(T>=iso(ws)&&T<=iso(addDays(ws,6)))?T:iso(ws);slideDir=quiet?"":n>0?"next":"prev";render();slideDir=""}
 function shiftMonth(n,quiet){const ms=parse(state.monthStart);const m=new Date(ms.getFullYear(),ms.getMonth()+n,1);state.monthStart=iso(m);
   const a=iso(m),b=iso(new Date(m.getFullYear(),m.getMonth()+1,0));state.day=(T>=a&&T<=b)?T:a;slideDir=quiet?"":n>0?"next":"prev";render();slideDir=""}
@@ -1687,7 +1689,7 @@ document.addEventListener("click",ev=>{
   const rg=t.closest("[data-range]");if(rg){state.range=rg.dataset.range;render();return}
   const mo=t.closest("[data-month]");if(mo){shiftMonth(+mo.dataset.month);return}
   const md=t.closest("[data-mday]");if(md){state.day=md.dataset.mday;render();const g=document.getElementById("mg-"+state.day);if(g){const sc=$("#scroll");sc.scrollTo({top:g.offsetTop-sc.offsetTop-8,behavior:"smooth"})}return}
-  const od=t.closest("[data-openday]");if(od){const d=od.dataset.openday;state.day=d;state.weekStart=iso(weekOf(parse(d)));setView("day");return}
+  const od=t.closest("[data-openday]");if(od){const d=od.dataset.openday;state.day=d;showInStrip(d);setView("day");return}
   const wk=t.closest("[data-week]");if(wk){shiftWeek(+wk.dataset.week);return}
   const dy=t.closest("[data-day]");if(dy){state.day=dy.dataset.day;render();return}
   const go=t.closest("[data-go]");if(go){draft=blank();setView(go.dataset.go);return}
@@ -1715,13 +1717,13 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="31";
+const APP_VERSION="32";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
     if(v&&String(v)!==APP_VERSION){const reg=await navigator.serviceWorker?.getRegistration();await reg?.update();location.reload()}}catch(e){}
 }
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkForUpdate()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkForUpdate();const n=new Date();if(n.toDateString()!==new Date(Date.parse(T+"T12:00:00")).toDateString())location.reload()}});
 window.addEventListener("pageshow",checkForUpdate);
 setInterval(checkForUpdate,30*60*1000);
 </script>
