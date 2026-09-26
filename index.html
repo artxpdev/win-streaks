@@ -741,6 +741,11 @@ button{font-family:inherit}
 :root{--gym:#CDB8F0}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--gym:#BBA3E6}}
 :root[data-theme="dark"]{--gym:#BBA3E6}
+
+/* Networking colour */
+:root{--networking:#F4FFB3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--networking:#F4FFB3}}
+:root[data-theme="dark"]{--networking:#F4FFB3}
 </style>
 
 </head>
@@ -1717,7 +1722,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="32";
+const APP_VERSION="33";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
