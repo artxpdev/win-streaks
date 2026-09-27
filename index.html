@@ -747,7 +747,9 @@ button{font-family:inherit}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--networking:#9FFFDD}}
 :root[data-theme="dark"]{--networking:#9FFFDD}
 
-.mspacer{height:55vh}
+
+
+.mpast{display:block;margin:10px 0 0}
 </style>
 
 </head>
@@ -1305,15 +1307,18 @@ function monthView(){
   const row=e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&e.area!=="running"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
         <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
         <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`;
-  const dates=[...new Set(mItems.map(e=>e.date))]; if(state.day>=a&&state.day<=b&&!dates.includes(state.day))dates.push(state.day); dates.sort();
-  h+=`<div class="mlist-head"><span>All of ${MONTHS[m]}</span><span>${mItems.length} ${mItems.length===1?"event":"events"}</span></div>`;
+  const cur=T>=a&&T<=b, hidePast=cur&&!state.monthPast;
+  const dates=[...new Set(mItems.map(e=>e.date))].filter(d=>!hidePast||d>=T||d===state.day); if(state.day>=a&&state.day<=b&&!dates.includes(state.day))dates.push(state.day); if(cur&&!dates.includes(T))dates.push(T); dates.sort();
+  const pastCount=cur?mItems.filter(e=>e.date<T).length:0;
+  const shown=mItems.filter(e=>dates.includes(e.date)).length;
+  h+=`<div class="mlist-head"><span>${hidePast?`${MONTHS[m]} from today`:`All of ${MONTHS[m]}`}</span><span>${shown} ${shown===1?"event":"events"}</span></div>`;
+  if(cur&&pastCount)h+=`<button class="fresh mpast" data-monthpast>${state.monthPast?"Hide earlier days":`Show earlier days (${pastCount})`}</button>`;
   h+=dates.length?dates.map(d=>{const list=mItems.filter(e=>e.date===d).sort(byTime), hd=holidayOn(d);
     return `<section class="mday-group ${d===state.day?"sel":""} ${d<T?"past":""}" id="mg-${d}">
       <div class="group"><span>${d===T?"Today · ":""}${label(d)}</span><button class="small mopen" data-openday="${d}">Open day</button></div>
       ${hd?`<div class="whol">${esc(hd[2])}</div>`:""}
       ${list.length?list.map(row).join(""):`<div class="wempty">Nothing planned. <button class="fresh" data-go="add">Plan something</button></div>`}
     </section>`}).join(""):`<div class="empty">Nothing planned in ${MONTHS[m]} yet.</div>`;
-  h+=`<div class="mspacer"></div>`;
   return h;
 }
 function rangeBounds(){
@@ -1473,13 +1478,11 @@ function render(){
 }
 function setView(v){
   const fromTab=v==="week"&&state.view!=="week", toMonth=v==="month"&&state.view!=="month";
-  if(toMonth){state.monthStart=iso(new Date(TODAY.getFullYear(),TODAY.getMonth(),1));state.day=T}
+  if(toMonth){state.monthStart=iso(new Date(TODAY.getFullYear(),TODAY.getMonth(),1));state.day=T;state.monthPast=false}
   if(fromTab){state.weeksShown=6;state.weekStart=iso(weekOf(TODAY))}
   state.view=v;confirmClear=false;document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v));$("#scroll").scrollTop=0;render();
   // Week opens on today
   if(fromTab){const sc=$("#scroll"),el=document.querySelector(".wday.is-today");if(el)sc.scrollTop=el.offsetTop-sc.offsetTop-44}
-  // Month opens with the list scrolled to today
-  if(toMonth){const sc=$("#scroll"),el=document.getElementById("mg-"+T);if(el)sc.scrollTop=el.offsetTop-sc.offsetTop-8}
 }
 function toast(t){$(".toast")?.remove();const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=t;$("#phone").appendChild(d);clearTimeout(toastTimer);toastTimer=setTimeout(()=>d.remove(),2600)}
 
@@ -1691,6 +1694,7 @@ document.addEventListener("click",ev=>{
   const ar=t.closest("[data-area]");if(ar){state.area=ar.dataset.area;render();return}
   const rg=t.closest("[data-range]");if(rg){state.range=rg.dataset.range;render();return}
   const mo=t.closest("[data-month]");if(mo){shiftMonth(+mo.dataset.month);return}
+  if(t.closest("[data-monthpast]")){state.monthPast=!state.monthPast;render();return}
   const md=t.closest("[data-mday]");if(md){state.day=md.dataset.mday;render();const g=document.getElementById("mg-"+state.day);if(g){const sc=$("#scroll");sc.scrollTo({top:g.offsetTop-sc.offsetTop-8,behavior:"smooth"})}return}
   const od=t.closest("[data-openday]");if(od){const d=od.dataset.openday;state.day=d;showInStrip(d);setView("day");return}
   const wk=t.closest("[data-week]");if(wk){shiftWeek(+wk.dataset.week);return}
@@ -1720,7 +1724,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="37";
+const APP_VERSION="38";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
