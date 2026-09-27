@@ -746,6 +746,8 @@ button{font-family:inherit}
 :root{--networking:#9FFFDD}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--networking:#9FFFDD}}
 :root[data-theme="dark"]{--networking:#9FFFDD}
+
+.mspacer{height:55vh}
 </style>
 
 </head>
@@ -1311,6 +1313,7 @@ function monthView(){
       ${hd?`<div class="whol">${esc(hd[2])}</div>`:""}
       ${list.length?list.map(row).join(""):`<div class="wempty">Nothing planned. <button class="fresh" data-go="add">Plan something</button></div>`}
     </section>`}).join(""):`<div class="empty">Nothing planned in ${MONTHS[m]} yet.</div>`;
+  h+=`<div class="mspacer"></div>`;
   return h;
 }
 function rangeBounds(){
@@ -1717,7 +1720,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="36";
+const APP_VERSION="37";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
