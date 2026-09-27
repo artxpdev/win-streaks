@@ -1469,11 +1469,14 @@ function render(){
   if(keep){const el=document.getElementById(keep[0]);if(el){el.focus();try{if(keep[1]!=null)el.setSelectionRange(keep[1],keep[1])}catch(e){}}}
 }
 function setView(v){
-  const fromTab=v==="week"&&state.view!=="week";
+  const fromTab=v==="week"&&state.view!=="week", toMonth=v==="month"&&state.view!=="month";
+  if(toMonth){state.monthStart=iso(new Date(TODAY.getFullYear(),TODAY.getMonth(),1));state.day=T}
   if(fromTab){state.weeksShown=6;state.weekStart=iso(weekOf(TODAY))}
   state.view=v;confirmClear=false;document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v));$("#scroll").scrollTop=0;render();
   // Week opens on today
   if(fromTab){const sc=$("#scroll"),el=document.querySelector(".wday.is-today");if(el)sc.scrollTop=el.offsetTop-sc.offsetTop-44}
+  // Month opens with the list scrolled to today
+  if(toMonth){const sc=$("#scroll"),el=document.getElementById("mg-"+T);if(el)sc.scrollTop=el.offsetTop-sc.offsetTop-8}
 }
 function toast(t){$(".toast")?.remove();const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=t;$("#phone").appendChild(d);clearTimeout(toastTimer);toastTimer=setTimeout(()=>d.remove(),2600)}
 
@@ -1714,7 +1717,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="35";
+const APP_VERSION="36";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
