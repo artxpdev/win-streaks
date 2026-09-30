@@ -761,6 +761,8 @@ button{font-family:inherit}
 .notes{display:block;width:100%;min-height:58vh;margin-top:14px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--phone);color:var(--ink);font:16px/1.55 var(--body);resize:none;outline:none;-webkit-user-select:text;user-select:text}
 .notes:focus{border-color:var(--ink)}
 .nsaved{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:right}
+
+.lnseg2{grid-template-columns:1fr 1fr!important}
 </style>
 
 </head>
@@ -1175,12 +1177,12 @@ async function importBackup(file){
 let notesText=""; try{notesText=localStorage.getItem("ws-notes")||""}catch(e){}
 let notesTimer=0;
 function notesView(){
-  return header("")+`<div class="seg lnseg" role="group" aria-label="Lists"><button data-lists="todos" aria-pressed="false">To-dos</button><button data-lists="notes" aria-pressed="true">Notes</button></div>
+  return header("")+`<div class="seg lnseg lnseg2" role="group" aria-label="Lists"><button data-lists="notes" aria-pressed="true">Notes</button><button data-lists="todos" aria-pressed="false">To-dos</button></div>
     <label class="sr" for="notesArea">Notes</label><textarea id="notesArea" class="notes" placeholder="Type anything…">${esc(notesText)}</textarea>
     <div class="nsaved">Saved on this phone as you type</div>`;
 }
 function todosView(){
-  if(state.lists==="notes")return notesView();
+  if((state.lists||"notes")==="notes")return notesView();
   const open=todos.filter(t=>!t.done).sort((a,b)=>(a.order||0)-(b.order||0)||a.createdAt-b.createdAt), done=todos.filter(t=>t.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
   const row=t=>`<div class="todo ${t.done?"is-done":"movable"}" data-tid="${esc(t.id)}">${t.done?"":`<span class="thandle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>`}
     <button class="check" style="--c:var(--startup)" data-todo="${esc(t.id)}" aria-pressed="${t.done}" aria-label="${t.done?"Mark not done":"Mark done"}: ${esc(t.title)}">${CHECK}</button>
@@ -1193,7 +1195,7 @@ function todosView(){
       <div class="field"><label for="tsArea">Area</label><select id="tsArea">${Object.entries(AREAS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("")}</select></div>
       <div class="actions" style="margin-top:0"><button type="button" class="btn" data-schedcancel>Cancel</button><button type="submit" class="btn primary">${t.schedDate?"Update date":"Add to calendar"}</button></div>
     </form>`:""}`;
-  return header(open.length?`${open.length} to do`:"All clear")+`<div class="seg lnseg" role="group" aria-label="Lists"><button data-lists="todos" aria-pressed="true">To-dos</button><button data-lists="notes" aria-pressed="false">Notes</button></div>`+`
+  return header(open.length?`${open.length} to do`:"All clear")+`<div class="seg lnseg lnseg2" role="group" aria-label="Lists"><button data-lists="notes" aria-pressed="false">Notes</button><button data-lists="todos" aria-pressed="true">To-dos</button></div>`+`
     <form class="tadd" id="todoForm"><label class="sr" for="todoIn">New to-do</label><input id="todoIn" maxlength="160" placeholder="Add a to-do" value="${esc(todoDraft)}" autocomplete="off"><button class="small primary" type="submit">Add</button></form>
     <div class="tlist">${open.length?open.map(row).join(""):`<div class="empty">Nothing on your list. Add anything you need to get done, without a date.</div>`}</div>
     ${done.length?`<div class="group"><span>Done · ${done.length}</span><button class="fresh" data-todoclear>${todoConfirm?"Tap again to clear":"Clear done"}</button></div><div class="tlist">${done.map(row).join("")}</div>`:""}`;
@@ -1749,7 +1751,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="40";
+const APP_VERSION="41";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
