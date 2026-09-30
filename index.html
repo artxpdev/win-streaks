@@ -755,6 +755,12 @@ button{font-family:inherit}
 :root{--hosting:#FFA94D}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--hosting:#FFA94D}}
 :root[data-theme="dark"]{--hosting:#FFA94D}
+
+/* To-dos | Notes */
+.lnseg{margin-top:16px}
+.notes{display:block;width:100%;min-height:58vh;margin-top:14px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--phone);color:var(--ink);font:16px/1.55 var(--body);resize:none;outline:none;-webkit-user-select:text;user-select:text}
+.notes:focus{border-color:var(--ink)}
+.nsaved{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:right}
 </style>
 
 </head>
@@ -1148,7 +1154,7 @@ function myName(){try{const n=localStorage.getItem("ws-name");if(n!==null)return
 function appTitle(){const n=myName().trim();return n?`${n}'s Win Streaks`:"My Win Streaks"}
 function googleVisible(){try{return localStorage.getItem("ws-gon")==="1"||/[?&]google\b/.test(location.search)}catch(e){return false}}
 function exportBackup(){
-  const data={app:"n-win-streaks",version:1,exportedAt:new Date().toISOString(),items:appItems,todos,diet,gMeta};
+  const data={app:"n-win-streaks",version:1,exportedAt:new Date().toISOString(),items:appItems,todos,diet,gMeta,notes:notesText};
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:"application/json"}));
   const a=document.createElement("a");a.href=url;a.download=`win-streaks-backup-${T}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
@@ -1160,11 +1166,21 @@ async function importBackup(file){
     appItems=[...byId.values()]; remerge(); saveLocal();
     const tIds=new Map(todos.map(x=>[x.id,x])); (d.todos||[]).forEach(x=>{const n=normTodo(x.id,x);if(n)tIds.set(n.id,n)}); todos=[...tIds.values()]; saveTodosLocal();
     if(d.diet&&/^\d{4}-\d{2}-\d{2}$/.test(d.diet.start||"")){diet={start:d.diet.start,days:{}};saveDietLocal()}
+    if(typeof d.notes==="string"&&d.notes&&!notesText){notesText=d.notes;try{localStorage.setItem("ws-notes",notesText)}catch(e){}}
     if(d.gMeta&&typeof d.gMeta==="object"){gMeta={...gMeta,...d.gMeta};saveGMetaLocal();gRebuild()}
     render(); toast("Backup imported");
   }catch(e){toast("That file isn't a Win Streaks backup")}
 }
+// Notes: a blank page to type anything, saved on this phone as you type
+let notesText=""; try{notesText=localStorage.getItem("ws-notes")||""}catch(e){}
+let notesTimer=0;
+function notesView(){
+  return header("")+`<div class="seg lnseg" role="group" aria-label="Lists"><button data-lists="todos" aria-pressed="false">To-dos</button><button data-lists="notes" aria-pressed="true">Notes</button></div>
+    <label class="sr" for="notesArea">Notes</label><textarea id="notesArea" class="notes" placeholder="Type anything…">${esc(notesText)}</textarea>
+    <div class="nsaved">Saved on this phone as you type</div>`;
+}
 function todosView(){
+  if(state.lists==="notes")return notesView();
   const open=todos.filter(t=>!t.done).sort((a,b)=>(a.order||0)-(b.order||0)||a.createdAt-b.createdAt), done=todos.filter(t=>t.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
   const row=t=>`<div class="todo ${t.done?"is-done":"movable"}" data-tid="${esc(t.id)}">${t.done?"":`<span class="thandle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>`}
     <button class="check" style="--c:var(--startup)" data-todo="${esc(t.id)}" aria-pressed="${t.done}" aria-label="${t.done?"Mark not done":"Mark done"}: ${esc(t.title)}">${CHECK}</button>
@@ -1177,7 +1193,7 @@ function todosView(){
       <div class="field"><label for="tsArea">Area</label><select id="tsArea">${Object.entries(AREAS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("")}</select></div>
       <div class="actions" style="margin-top:0"><button type="button" class="btn" data-schedcancel>Cancel</button><button type="submit" class="btn primary">${t.schedDate?"Update date":"Add to calendar"}</button></div>
     </form>`:""}`;
-  return header(open.length?`${open.length} to do`:"All clear")+`
+  return header(open.length?`${open.length} to do`:"All clear")+`<div class="seg lnseg" role="group" aria-label="Lists"><button data-lists="todos" aria-pressed="true">To-dos</button><button data-lists="notes" aria-pressed="false">Notes</button></div>`+`
     <form class="tadd" id="todoForm"><label class="sr" for="todoIn">New to-do</label><input id="todoIn" maxlength="160" placeholder="Add a to-do" value="${esc(todoDraft)}" autocomplete="off"><button class="small primary" type="submit">Add</button></form>
     <div class="tlist">${open.length?open.map(row).join(""):`<div class="empty">Nothing on your list. Add anything you need to get done, without a date.</div>`}</div>
     ${done.length?`<div class="group"><span>Done · ${done.length}</span><button class="fresh" data-todoclear>${todoConfirm?"Tap again to clear":"Clear done"}</button></div><div class="tlist">${done.map(row).join("")}</div>`:""}`;
@@ -1670,6 +1686,7 @@ document.addEventListener("click",ev=>{
   if(t.closest("[data-gconnect]")){gAuth(false);return}
   if(t.closest("[data-export]")){exportBackup();return}
   const ga=t.closest("[data-garea]");if(ga){patch(ga.dataset.gitem,{area:ga.dataset.garea});return}
+  const ls=t.closest("[data-lists]");if(ls){state.lists=ls.dataset.lists;render();return}
   const td=t.closest("[data-todo]");if(td){const x=todos.find(y=>y.id===td.dataset.todo);if(x){const nd=!x.done;patchTodo(x.id,{done:nd,doneAt:nd?Date.now():null});if(nd)toast("Done: "+x.title)}return}
   const te=t.closest("[data-tedit]");if(te&&!tdrag){todoEdit=te.dataset.tedit;render();const i=$("#tedit");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}return}
   const tsd=t.closest("[data-todosched]");if(tsd){todoSched=todoSched===tsd.dataset.todosched?null:tsd.dataset.todosched;render();return}
@@ -1714,7 +1731,7 @@ document.addEventListener("click",ev=>{
 document.addEventListener("focusout",ev=>{if(ev.target.id==="tedit"&&todoEdit)setTimeout(saveTodoEdit,0)});
 document.addEventListener("submit",ev=>{if(ev.target.id==="schedForm"){ev.preventDefault();scheduleTodo();return}if(ev.target.id==="todoForm"){ev.preventDefault();const v=$("#todoIn")?.value||"";todoDraft="";addTodo(v);setTimeout(()=>$("#todoIn")?.focus(),0);return}if(ev.target.id==="planForm"){ev.preventDefault();submitForm()}});
 document.addEventListener("change",ev=>{if(ev.target.id==="importFile"&&ev.target.files?.[0]){importBackup(ev.target.files[0]);ev.target.value="";return}if(ev.target.id==="f-repeat"){readForm();if(draft.repeat==="days"&&!(draft.days||[]).length)draft.days=[parse(draft.date||T).getDay()];render()}});
-document.addEventListener("input",ev=>{if(ev.target.id==="myName"){try{localStorage.setItem("ws-name",ev.target.value.slice(0,20))}catch(e){}const b=document.querySelector(".brand");if(b)b.firstChild.textContent=appTitle();document.title=appTitle();return}if(ev.target.id==="todoIn"){todoDraft=ev.target.value;return}if(ev.target.id==="quick")quickText=ev.target.value;else if(ev.target.closest("#planForm"))readForm()});
+document.addEventListener("input",ev=>{if(ev.target.id==="notesArea"){notesText=ev.target.value;clearTimeout(notesTimer);notesTimer=setTimeout(()=>{try{localStorage.setItem("ws-notes",notesText)}catch(e){}},300);return}if(ev.target.id==="myName"){try{localStorage.setItem("ws-name",ev.target.value.slice(0,20))}catch(e){}const b=document.querySelector(".brand");if(b)b.firstChild.textContent=appTitle();document.title=appTitle();return}if(ev.target.id==="todoIn"){todoDraft=ev.target.value;return}if(ev.target.id==="quick")quickText=ev.target.value;else if(ev.target.closest("#planForm"))readForm()});
 document.addEventListener("keydown",ev=>{
   if(ev.target.id==="tedit"){if(ev.key==="Enter"){ev.preventDefault();saveTodoEdit()}else if(ev.key==="Escape"){todoEdit=null;render()}return}
   if(ev.key==="Enter"&&ev.target.matches("[data-open]"))openSheet(ev.target.dataset.open);
@@ -1732,7 +1749,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="39";
+const APP_VERSION="40";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
