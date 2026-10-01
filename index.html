@@ -763,6 +763,14 @@ button{font-family:inherit}
 .nsaved{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:right}
 
 .lnseg2{grid-template-columns:1fr 1fr!important}
+
+/* Family, Events, Personal */
+:root{--family:#FF8A7A;--events:#8FD3FF;--personal:#E5CFA8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--family:#FF8A7A;--events:#8FD3FF;--personal:#E5CFA8}}
+:root[data-theme="dark"]{--family:#FF8A7A;--events:#8FD3FF;--personal:#E5CFA8}
+/* 14 area icons still fit on one line */
+.tledger .tok{width:auto!important;height:auto!important;flex:1 1 0!important;max-width:26px;aspect-ratio:1}
+.tledger .tok svg{width:58%!important;height:58%!important}
 </style>
 
 </head>
@@ -789,13 +797,16 @@ const AREAS={
   gym:{n:"Gym",how:"Workouts, classes, weights"},
   social:{n:"Social",how:"Friends, family, parties"},
   hosting:{n:"Hosting",how:"Having people over at your place"},
+  family:{n:"Family",how:"Time with family"},
   income:{n:"Income",unit:"₪",how:"Paid work, invoices, proposals, with amounts"},
   networking:{n:"Networking",how:"Meetings with valuable networks"},
   love:{n:"Love",how:"Dates, time together"},
   admin:{n:"Life admin",how:"Bills, forms, appointments, errands"},
   startup:{n:"Startup",how:"Startup events you attend: meetups, conferences, demo days, networking"},
   bdays:{n:"Bdays",how:"Birthdays to remember and celebrate"},
-  wellbeing:{n:"Growth",how:"Psychologist, learning something new, podcasts, reading"}
+  wellbeing:{n:"Growth",how:"Psychologist, learning something new, podcasts, reading"},
+  events:{n:"Events",how:"Everything that comes in from Google Calendar"},
+  personal:{n:"Personal",how:"Just for you"}
 };
 const pad=n=>String(n).padStart(2,"0");
 const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -813,6 +824,9 @@ const cv=a=>`--c:var(--${a})`;
 const fmtAmt=(a,v)=>!v?"":a==="income"?"₪"+Number(v).toLocaleString("en-US"):`${+v} ${AREAS[a].unit||""}`.trim();
 const ICONS={
   hosting:'<path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>',
+  family:'<circle cx="8" cy="6.5" r="2.5"/><circle cx="16" cy="6.5" r="2.5"/><circle cx="12" cy="12.5" r="2"/><path d="M3.5 20v-3.5a4.5 4.5 0 0 1 9 0V20M11.5 20v-3.5a4.5 4.5 0 0 1 9 0V20"/>',
+  events:'<path d="M4 8.5V6.5h16v2a2 2 0 0 0 0 4v2H4v-2a2 2 0 0 0 0-4z"/><path d="M14 6.5v8" stroke-dasharray="1.5 2"/><path d="M4 18.5h16"/>',
+  personal:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20.5a7 7 0 0 1 14 0"/>',
   gym:'<path d="M3 10v4M6.5 7.5v9M17.5 7.5v9M21 10v4M6.5 12h11"/>',
   bdays:'<path d="M4 20h16v-6.5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"/><path d="M4 15.5c1.3 1 2.7 1 4 0s2.7-1 4 0 2.7 1 4 0 2.7-1 4 0"/><path d="M12 11.5V8"/><path d="M12 4.2c.9.9.9 2 0 2.8-.9-.8-.9-1.9 0-2.8z"/>',
   networking:'<circle cx="6" cy="7" r="2.6"/><circle cx="18" cy="7" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.6 7h6.8M7.2 9.3l3.6 6.4M16.8 9.3l-3.6 6.4"/>',
@@ -970,7 +984,7 @@ function gRebuild(){
     if(allDay){const d1=String(e0.date||"").slice(0,10);let d=parse(d0);while(days.length<14){d=addDays(d,1);if(!d1||iso(d)>=d1)break;days.push(iso(d))}}
     const m=gMeta[ev.id]||{}, title=clean(ev.summary||"(No title)",120);
     days.forEach((date,i)=>out.push({id:"g:"+ev.id+(i?":"+i:""),gid:ev.id,google:true,link:typeof ev.htmlLink==="string"?ev.htmlLink:"",
-      title,area:m.area in AREAS?m.area:guessArea(title+" "+(ev.location||"")),date,t:allDay?"":String(s0.dateTime).slice(11,16),end:allDay?"":String(e0.dateTime||"").slice(11,16),
+      title,area:m.area in AREAS?m.area:"events",date,t:allDay?"":String(s0.dateTime).slice(11,16),end:allDay?"":String(e0.dateTime||"").slice(11,16),
       done:!!m.done,doneAt:m.doneAt||null,amount:Number(m.amount)||null,notes:clean(ev.location||"",200),reflection:clean(m.reflection||"",800),example:false,createdAt:0}));
   }
   gItems=out; remerge(); render(); const open=$(".sheet")?.dataset.id; if(open)refreshSheet(open);
@@ -1394,6 +1408,9 @@ const CHEERS={
   startup:["Unicorn behaviour","Investors are sweating","Founder mode: on"],
   networking:["Connector energy","Your network is your net worth","LinkedIn could never"],
   hosting:["Host with the most","Your place, your rules","Best house in town"],
+  family:["Family first","The family group chat approves","Quality time unlocked"],
+  events:["Showed up. That counts.","Out and about","Calendar conquered"],
+  personal:["Me time well spent","Self-care queen","Just for you, and done"],
   gym:["Stronger than yesterday","Muscles loading…","The gym misses you already"],
   bdays:["Best friend energy","Birthday hero","They'll remember you remembered"],
   social:["Social butterfly unlocked","Main character energy","The group chat is proud"],
@@ -1761,7 +1778,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="42";
+const APP_VERSION="43";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
