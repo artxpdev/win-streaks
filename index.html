@@ -776,6 +776,12 @@ button{font-family:inherit}
 :root{--running:#DDF8C4}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--running:#DDF8C4}}
 :root[data-theme="dark"]{--running:#DDF8C4}
+
+/* race countdown under the apple */
+.rline{flex-wrap:wrap;line-height:1.5}
+.rline b{color:var(--ink);font-weight:700}
+.rline .rsep{font-style:normal;color:var(--muted);margin:0 4px}
+.dbar+.dbar{margin-top:6px}
 </style>
 
 </head>
@@ -1098,7 +1104,14 @@ function dietCard(d){
   if(state.area!=="all")return "";
   return `<div class="dbar">${dietRow(d)||`<span class="dline">Before Day 1</span>`}
     ${dietConfirm?`<span class="dset"><label class="sr" for="dayone">Day 1 date</label><input type="date" id="dayone" value="${esc(diet.start)}"><button class="fresh" data-setone>Set as Day 1</button><button class="fresh" data-cancelone>Cancel</button></span>`
-      :`<button class="fresh" data-fresh>Reset</button>`}</div>`;
+      :`<button class="fresh" data-fresh>Reset</button>`}</div>`+raceLine();
+}
+// race countdowns, counted from today
+const RACES=[["2027-02-26","TLV Marathon 21K"],["2026-10-28","TLV Night Run"]];
+function raceLine(){
+  const left=d=>Math.round((parse(d)-TODAY)/864e5);
+  const parts=RACES.map(([d,n])=>{const k=left(d);return k>0?`<b>${k}</b> ${k===1?"day":"days"} to ${n}`:k===0?`<b>${n}</b> is today!`:""}).filter(Boolean);
+  return parts.length?`<div class="dbar"><span class="dline rline" style="${cv("running")}"><span class="apple">${icon("running")}</span><span>${parts.join(" <i class=\"rsep\">/</i> ")}</span></span></div>`:"";
 }
 
 // ---------- to-dos (no date, just a list) ----------
@@ -1783,7 +1796,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="44";
+const APP_VERSION="45";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
