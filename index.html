@@ -778,7 +778,9 @@ button{font-family:inherit}
 :root[data-theme="dark"]{--running:#DDF8C4}
 
 /* race countdown under the apple */
-.rline{flex-wrap:wrap;line-height:1.5}
+.rline{display:flex!important;flex-wrap:nowrap!important;align-items:center;line-height:1.45}
+.rline .apple{flex:none}
+.rline>span:last-child{flex:1;min-width:0}
 .rline b{color:var(--ink);font-weight:700}
 .rline .rsep{font-style:normal;color:var(--muted);margin:0 4px}
 .dbar+.dbar{margin-top:6px}
@@ -1796,7 +1798,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="45";
+const APP_VERSION="46";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
