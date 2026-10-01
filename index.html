@@ -1111,7 +1111,7 @@ function dietCard(d){
 // race countdowns, counted from today
 const RACES=[["2027-02-26","TLV Marathon 21K"],["2026-10-28","TLV Night Run"]];
 function raceLine(){
-  const left=d=>Math.round((parse(d)-TODAY)/864e5);
+  const left=d=>Math.round((parse(d)-parse(state.day))/864e5); // counted from the day you are viewing
   const parts=RACES.map(([d,n])=>{const k=left(d);return k>0?`<b>${k}</b> ${k===1?"day":"days"} to ${n}`:k===0?`<b>${n}</b> is today!`:""}).filter(Boolean);
   return parts.length?`<div class="dbar"><span class="dline rline" style="${cv("running")}"><span class="apple">${icon("running")}</span><span>${parts.join(" <i class=\"rsep\">/</i> ")}</span></span></div>`:"";
 }
@@ -1798,13 +1798,15 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="46";
+const APP_VERSION="47";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
     if(v&&String(v)!==APP_VERSION){const reg=await navigator.serviceWorker?.getRegistration();await reg?.update();location.reload()}}catch(e){}
 }
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkForUpdate();const n=new Date();if(n.toDateString()!==new Date(Date.parse(T+"T12:00:00")).toDateString())location.reload()}});
+function newDayCheck(){const n=new Date(),k=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`;if(k!==T)location.reload()}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkForUpdate();newDayCheck()}});
+window.addEventListener("focus",newDayCheck);window.addEventListener("pageshow",newDayCheck);setInterval(newDayCheck,60*1000);
 window.addEventListener("pageshow",checkForUpdate);
 setInterval(checkForUpdate,30*60*1000);
 </script>
