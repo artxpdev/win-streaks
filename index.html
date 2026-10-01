@@ -771,6 +771,11 @@ button{font-family:inherit}
 /* 14 area icons still fit on one line */
 .tledger .tok{width:auto!important;height:auto!important;flex:1 1 0!important;max-width:26px;aspect-ratio:1}
 .tledger .tok svg{width:58%!important;height:58%!important}
+
+/* Run: lightest apple green */
+:root{--running:#DDF8C4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--running:#DDF8C4}}
+:root[data-theme="dark"]{--running:#DDF8C4}
 </style>
 
 </head>
@@ -1295,7 +1300,7 @@ function dayView(){
     const dates=[...new Set(up.map(e=>e.date))];
     h+=`<div class="mlist-head" ${all?"":`style="${cv(state.area)}"`}><span>${all?"":`<i class="updot"></i>`}Coming up · ${all?"next 7 days":AREAS[state.area].n}</span><span>${up.length} ${up.length===1?"event":"events"}</span></div>`;
     h+=dates.length?dates.map(d=>`<div class="group"><span>${label(d)}</span><button class="small mopen" data-openday="${d}">Open day</button></div>
-      ${up.filter(e=>e.date===d).map(e=>`<div class="row ${e.done?"is-done":""} ${all&&e.area!=="running"&&!e.done?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+      ${up.filter(e=>e.date===d).map(e=>`<div class="row ${e.done?"is-done":""} ${all&&!e.done?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
         <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
         <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`).join("")}`).join("")
       :`<div class="wempty" style="margin-top:10px">${all?"Nothing planned for the next 7 days.":`Nothing else planned for ${AREAS[state.area].n} yet.`} <button class="fresh" data-go="add">Plan something</button></div>`;
@@ -1328,7 +1333,7 @@ function weekView(){
       const c=list.filter(e=>e.done).length;
       h+=`<div class="wday ${k===T?"is-today":""}"><h3>${label(k)}${k===T?" · today":""}<span>${list.length?`${c}/${list.length}`:""}</span></h3>
         ${holidayOn(k)?`<div class="whol">${esc(holidayOn(k)[2])}</div>`:""}
-        ${list.length?list.map(e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&e.area!=="running"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+        ${list.length?list.map(e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
           <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
           <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`).join(""):`<div class="wempty">Nothing planned</div>`}
       </div>`;
@@ -1351,7 +1356,7 @@ function monthView(){
       <b>${d}</b><i>${list.slice(0,6).map(e=>`<em class="${e.done?"on":""}" style="${cv(e.area)}"></em>`).join("")}</i></button>`}
   h+=`</div>`;
   // the whole month, day by day; the tapped day is highlighted and scrolled to
-  const row=e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&e.area!=="running"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
+  const row=e=>`<div class="row ${e.done?"is-done":""} ${isMissed(e)?"is-missed":""} ${state.area==="all"&&!e.done&&e.date>=T?"filled":""}" style="${cv(e.area)}" data-open="${esc(e.id)}" role="button" tabindex="0">
         <button class="check" data-check="${esc(e.id)}" aria-pressed="${e.done}" aria-label="${e.done?"Mark not done":"Mark done"}: ${esc(e.title)}">${CHECK}</button>
         <span class="t">${esc(e.t||"—")}</span><span class="n">${esc(e.title)}</span></div>`;
   const cur=T>=a&&T<=b, hidePast=cur&&!state.monthPast;
@@ -1778,7 +1783,7 @@ dbState="local";loadLocal();loadDietLocal();loadTodosLocal();document.title=appT
 </script>
 <script>
 // App version: when a newer one is published, the app reloads itself the next time you open it.
-const APP_VERSION="43";
+const APP_VERSION="44";
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).catch(()=>{});
 async function checkForUpdate(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});const v=(await r.json()).version;
